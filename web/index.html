@@ -49,6 +49,25 @@
             });
         }
     </script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+
+
+    <!-- Firebase Configuration -->
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyC9yvTQ9PWlQoyHf3vtzW8AloSFSy-GMFo",
+            authDomain: "meeter-app-17608.firebaseapp.com",
+            projectId: "meeter-app-17608",
+            storageBucket: "meeter-app-17608.appspot.com",
+            messagingSenderId: "102662386510",
+            appId: "1:102662386510:web:b475a1c3db88d778d3241f"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
     <script src="https://meet.jit.si/external_api.js" type="application/javascript"></script>
     <script src="main.dart.js" type="application/javascript" onendload="document.getElementById('loader').remove();"></script>
     <!-- <script src="main.dart.js" type="application/javascript"></script> -->

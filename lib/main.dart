@@ -1,21 +1,91 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
+import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
+import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 
+import 'package:meeter/chat_area.dart';
+import 'package:meeter/screens/chat_page.dart';
+import 'package:meeter/services/firestoreService.dart';
+import 'package:meeter/widgets/chat_list_tile.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/velocity_x.dart';
+
+import 'authUI.dart';
 import 'meet_screen.dart';
+import 'utils/authStatusNotifier.dart';
+import 'utils/theme_notifier.dart';
 
-void main() {
-  runApp(MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Vx.setPathUrlStrategy();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  bool isLightTheme = prefs.getBool('isLightTheme') ?? false;
+
+  print(isLightTheme);
+
+  runApp(ChangeNotifierProvider(
+    create: (_) => ThemeProvider(isLightTheme: isLightTheme),
+    child: AppStart(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class AppStart extends StatelessWidget {
+  const AppStart({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Meeter',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
+    ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
+    return MyApp(
+      themeProvider: themeProvider,
+    );
+  }
+}
+
+class MyApp extends StatefulWidget {
+  final ThemeProvider themeProvider;
+
+  const MyApp({Key? key, required this.themeProvider}) : super(key: key);
+  // This widget is the root of your application.
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final navigator = VxNavigator(
+    notFoundPage: (uri, params) => MaterialPage(
+      key: ValueKey('not-found-page'),
+      child: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: Text('Page ${uri.path} not found'),
+          ),
+        ),
       ),
-      home: MyHomePage(title: 'Meeter Home Page'),
+    ),
+    // observers: [MyObs()],
+
+    routes: {
+      '/': (uri, params) =>
+          MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+    },
+  );
+  @override
+  void initState() {
+    AuthStatusNotifier();
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      theme: widget.themeProvider.themeData(),
+      title: 'Meeter',
+      routerDelegate: navigator,
+      routeInformationParser: VxInformationParser(),
     );
   }
 }
@@ -30,55 +100,143 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  ThemeProvider? themeProvider;
+  @override
+  void initState() {
+    // TODO: implement initState
+    themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    FirestoreService().currentUserDocData;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title!),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'This app is under construction 🚧',
-              style: Theme.of(context).textTheme.headline6,
-            ),
-            Text(
-              'visit sometime later',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+      appBar: buildAppBar(),
+      body: VxDevice(
+        mobile: buildMainScreenForMobile(context),
+        web: buildMainScreenForWeb(context),
+        // web: AuthThreePage(),
       ),
       floatingActionButton: FloatingActionButton(onPressed: () {
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => Meeting()));
+        showAnimatedDialog(
+          duration: Duration(seconds: 1),
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return Dialog(child: SignInSignUpFlow());
+          },
+          animationType: DialogTransitionType.slideFromBottom,
+          curve: Curves.fastLinearToSlowEaseIn,
+        );
       }), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text(widget.title!),
+      actions: [
+        Switch.adaptive(
+          value: themeProvider!.isLightTheme ? false : true,
+          onChanged: (value) {
+            themeProvider!.toggleThemeData(value);
+          },
+        ),
+        PopupMenuButton(
+          initialValue: 2,
+          child: Center(child: Text('click here')),
+          itemBuilder: (context) {
+            return List.generate(5, (index) {
+              return PopupMenuItem(
+                value: index,
+                child: Text('button no $index'),
+              );
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Center buildMainScreenForMobile(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'This app is under construction 🚧',
+            style: Theme.of(context).textTheme.headline6,
+          ),
+          Text(
+            'visit sometime later',
+            style: Theme.of(context).textTheme.headline4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Row buildMainScreenForWeb(BuildContext context) {
+    // showDialog(
+    //     context: context, builder: (context) => Dialog(child: LoginScreen()));
+    return Row(
+      children: [
+        Container(
+          width: context.percentWidth * 30,
+          child: ChatGroupList(),
+        ),
+        VerticalDivider(),
+        Expanded(
+          child: ChatPage(),
+        ),
+      ],
+    );
+  }
+}
+
+class ChatGroupList extends StatelessWidget {
+  const ChatGroupList({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StreamBuilder<List<types.User>>(
+        stream: FirebaseChatCore.instance.users(),
+        initialData: const [],
+        builder: (context, snapshot) {
+          return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                return ChatListTile(
+                    title: snapshot.data![index].firstName!,
+                    subTitle: '',
+                    avatorUrl: snapshot.data![index].imageUrl!,
+                    trailingText: '');
+              });
+        },
+      ),
+    );
+    // return ListView(
+    //   children: ListTile.divideTiles(
+    //     context: context,
+    //     tiles: [
+    //       ChatListTile(
+    //           title: 'title',
+    //           subTitle: 'subTitle',
+    //           avatorUrl: 'avatorUrl',
+    //           trailingText: 'trailingText'),
+    //       ChatListTile(
+    //           title: 'title',
+    //           subTitle: 'subTitle',
+    //           avatorUrl: 'avatorUrl',
+    //           trailingText: 'trailingText'),
+    //     ],
+    //   ).toList(),
+    // );
   }
 }

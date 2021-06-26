@@ -238,6 +238,7 @@ class _MeetingState extends State<Meeting> {
     }
     // Define meetings options here
     var options = JitsiMeetingOptions(room: roomText.text)
+      // ..serverURL = 'https://meeter-app-17608.web.app'
       ..serverURL = serverUrl
       ..subject = subjectText.text
       ..userDisplayName = nameText.text
