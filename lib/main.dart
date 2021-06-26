@@ -4,7 +4,7 @@ import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 
-import 'package:meeter/chat_area.dart';
+// import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/widgets/chat_list_tile.dart';
@@ -38,8 +38,11 @@ class AppStart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
-    return MyApp(
-      themeProvider: themeProvider,
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => AuthStatusNotifier())],
+      child: MyApp(
+        themeProvider: themeProvider,
+      ),
     );
   }
 }
@@ -65,8 +68,6 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     ),
-    // observers: [MyObs()],
-
     routes: {
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
@@ -105,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // TODO: implement initState
     themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    FirestoreService().currentUserDocData;
+    // FirestoreService().getCurrentUserDocData;
     super.initState();
   }
 
@@ -118,20 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: VxDevice(
         mobile: buildMainScreenForMobile(context),
         web: buildMainScreenForWeb(context),
-        // web: AuthThreePage(),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        showAnimatedDialog(
-          duration: Duration(seconds: 1),
-          context: context,
-          barrierDismissible: true,
-          builder: (BuildContext context) {
-            return Dialog(child: SignInSignUpFlow());
-          },
-          animationType: DialogTransitionType.slideFromBottom,
-          curve: Curves.fastLinearToSlowEaseIn,
-        );
-      }), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -145,18 +133,49 @@ class _MyHomePageState extends State<MyHomePage> {
             themeProvider!.toggleThemeData(value);
           },
         ),
-        PopupMenuButton(
-          initialValue: 2,
-          child: Center(child: Text('click here')),
-          itemBuilder: (context) {
-            return List.generate(5, (index) {
-              return PopupMenuItem(
-                value: index,
-                child: Text('button no $index'),
+        SizedBox(width: 10),
+        Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
+          return PopupMenuButton(
+            onSelected: (value) {
+              showAnimatedDialog(
+                duration: Duration(seconds: 1),
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return Dialog(child: SignInSignUpFlow());
+                },
+                animationType: DialogTransitionType.slideFromBottom,
+                curve: Curves.fastLinearToSlowEaseIn,
               );
-            });
-          },
-        ),
+            },
+            initialValue: null,
+            child: authData.isUserAuthenticated
+                ? CircleAvatar(
+                    radius: 30.0,
+                    backgroundImage:
+                        NetworkImage(authData.currentUser!.photoUrl!),
+                    backgroundColor: Colors.transparent,
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(20.0), //or 15.0
+                    child: Container(
+                      // height: 70.0,
+                      // width: 70.0,
+                      color: Color(0xffFF0E58),
+                      child:
+                          Icon(Icons.person, color: Colors.white, size: 50.0),
+                    ),
+                  ),
+            itemBuilder: (context) {
+              return List.generate(5, (index) {
+                return PopupMenuItem(
+                  value: index,
+                  child: Text('button no $index'),
+                );
+              });
+            },
+          );
+        }),
       ],
     );
   }

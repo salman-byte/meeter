@@ -4,43 +4,43 @@
 
 import 'dart:convert';
 
+UserData userDataFromMap(String str) => UserData.fromMap(json.decode(str));
+
+String userDataToMap(UserData data) => json.encode(data.toMap());
+
 class UserData {
   UserData({
-    this.uid,
     this.email,
-    this.displayName,
     this.groups,
+    this.uid,
     this.photoUrl,
+    this.displayName,
   });
 
-  String? uid;
   String? email;
-  String? displayName;
   List<Group>? groups;
+  String? uid;
   String? photoUrl;
-
-  factory UserData.fromJson(String str) => UserData.fromMap(json.decode(str));
-
-  String toJson() => json.encode(toMap());
+  String? displayName;
 
   factory UserData.fromMap(Map<String, dynamic> json) => UserData(
-        uid: json["uid"] == null ? null : json["uid"],
         email: json["email"] == null ? null : json["email"],
-        displayName: json["displayName"] == null ? null : json["displayName"],
         groups: json["groups"] == null
             ? null
             : List<Group>.from(json["groups"].map((x) => Group.fromMap(x))),
+        uid: json["uid"] == null ? null : json["uid"],
         photoUrl: json["photoUrl"] == null ? null : json["photoUrl"],
+        displayName: json["displayName"] == null ? null : json["displayName"],
       );
 
   Map<String, dynamic> toMap() => {
-        "uid": uid == null ? null : uid,
         "email": email == null ? null : email,
-        "displayName": displayName == null ? null : displayName,
         "groups": groups == null
             ? null
             : List<dynamic>.from(groups!.map((x) => x.toMap())),
+        "uid": uid == null ? null : uid,
         "photoUrl": photoUrl == null ? null : photoUrl,
+        "displayName": displayName == null ? null : displayName,
       };
 }
 
@@ -52,10 +52,6 @@ class Group {
 
   String? id;
   String? category;
-
-  factory Group.fromJson(String str) => Group.fromMap(json.decode(str));
-
-  String toJson() => json.encode(toMap());
 
   factory Group.fromMap(Map<String, dynamic> json) => Group(
         id: json["id"] == null ? null : json["id"],

@@ -53,6 +53,8 @@ class ThemeProvider with ChangeNotifier {
   // Theme mode to display unique properties not cover in theme data
   ThemeColor themeMode() {
     return ThemeColor(
+      inputBackgroundColor:
+          isLightTheme ? Color(0xFFe7e7e8) : Color(0xFF222029),
       themeColor: Colors.purple,
       gradient: [
         if (isLightTheme) ...[Color(0xDDFF0080), Color(0xDDFF8C00)],
@@ -87,6 +89,7 @@ class ThemeColor {
   Color? backgroundColor;
   Color? toggleButtonColor;
   Color? toggleBackgroundColor;
+  Color? inputBackgroundColor;
   Color? textColor;
   List<BoxShadow>? shadow;
 
@@ -95,6 +98,7 @@ class ThemeColor {
     this.gradient,
     this.backgroundColor,
     this.toggleBackgroundColor,
+    this.inputBackgroundColor,
     this.toggleButtonColor,
     this.textColor,
     this.shadow,

@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:meeter/models/userModel.dart';
+import 'package:meeter/services/firestoreService.dart';
 
 class EmailAuth {
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -13,14 +15,20 @@ class EmailAuth {
         email: email,
         password: password,
       );
-      await FirebaseChatCore.instance.createUserInFirestore(
-        types.User(
-          firstName: 'Nishit',
-          id: userCredential.user!.uid, // UID from Firebase Authentication
-          imageUrl: 'https://i.pravatar.cc/300',
-          lastName: 'Dixit',
-        ),
-      );
+      await FirestoreService().createUserDoc(UserData(
+        email: email,
+        uid: userCredential.user!.uid,
+        displayName: 'Nishit Dixit',
+        photoUrl: 'https://i.pravatar.cc/126',
+      ));
+      // await FirebaseChatCore.instance.createUserInFirestore(
+      //   types.User(
+      //     firstName: 'Nishit',
+      //     id: userCredential.user!.uid, // UID from Firebase Authentication
+      //     imageUrl: 'https://i.pravatar.cc/300',
+      //     lastName: 'Dixit',
+      //   ),
+      // );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');

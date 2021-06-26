@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meeter/models/userModel.dart';
+import 'package:meeter/services/firestoreService.dart';
 
 enum AuthenticationStatus { SIGNEDIN, SIGNEDOUT }
 
 class AuthStatusNotifier extends ChangeNotifier {
   AuthenticationStatus? _currentStatus = AuthenticationStatus.SIGNEDOUT;
+  UserData? _currentLoggedInUser;
 
   AuthStatusNotifier() {
     // print("surrent status is $_currentStatus");
@@ -15,10 +18,21 @@ class AuthStatusNotifier extends ChangeNotifier {
         changeAuthStatus(newStatus: AuthenticationStatus.SIGNEDOUT);
       } else {
         print('User is signed in!');
-        changeAuthStatus(newStatus: AuthenticationStatus.SIGNEDIN);
+        setCurrentUser(uid: user.uid);
       }
     });
   }
+
+  setCurrentUser({required String uid}) async {
+    await FirestoreService().getCurrentUserDocData(uid: uid).then((value) {
+      if (value != null) {
+        _currentLoggedInUser = value;
+      }
+      changeAuthStatus(newStatus: AuthenticationStatus.SIGNEDIN);
+    });
+  }
+
+  UserData? get currentUser => _currentLoggedInUser;
 
   void changeAuthStatus({AuthenticationStatus? newStatus}) {
     _currentStatus = newStatus;

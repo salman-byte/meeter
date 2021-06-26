@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meeter/constants/constants.dart';
+import 'package:meeter/models/userModel.dart';
 
 class FirestoreService {
   // final String phoneNo;
@@ -16,13 +17,13 @@ class FirestoreService {
   //     FirebaseFirestore.instance.collection(WALLPAPERS_COLLECTION);
 
 //create user document in database
-  // Future createUserDoc(UserData userData) async {
-  //   try {
-  //     await userDataCollectionRefrence.doc(phoneNo).set(userData.toMap());
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  // }
+  Future createUserDoc(UserData userData) async {
+    try {
+      await userDataCollectionRefrence.doc(userData.uid).set(userData.toMap());
+    } catch (e) {
+      print(e);
+    }
+  }
 
   // get currentUserDataFromDB stream
   // Stream<UserData> get currentUserDocFromDBMappedIntoLocalUserData {
@@ -36,14 +37,14 @@ class FirestoreService {
   //   }
   // }
 
-  Future<DocumentSnapshot?> get currentUserDocData async {
+  Future<UserData?> getCurrentUserDocData({required String uid}) async {
     try {
       DocumentSnapshot snap = await FirebaseFirestore.instance
           .collection(USERS_COLLECTION)
-          .doc("V0Ph5gO8MVTi8p30QZLU")
+          .doc(uid)
           .get();
       print(snap.data());
-      return snap;
+      return userDataFromMap(jsonEncode(snap.data()));
     } catch (e) {
       print(e);
     }

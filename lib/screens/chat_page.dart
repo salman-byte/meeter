@@ -6,8 +6,10 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:meeter/utils/theme_notifier.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatPage extends StatefulWidget {
@@ -19,11 +21,13 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
+  ThemeProvider? _themeProvider;
   final _user = const types.User(id: '06c33e8b-e835-4736-80f4-63f44b66666c');
 
   @override
   void initState() {
     super.initState();
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _loadMessages();
   }
 
@@ -171,15 +175,19 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Chat(
-        messages: _messages,
-        onAttachmentPressed: _handleAtachmentPressed,
-        onMessageTap: _handleMessageTap,
-        onPreviewDataFetched: _handlePreviewDataFetched,
-        onSendPressed: _handleSendPressed,
-        user: _user,
-      ),
+    ThemeData currentTheme = _themeProvider!.themeData();
+    return Chat(
+      theme: DefaultChatTheme(
+          // inputBorderRadius: BorderRadius.circular(30),
+          // inputBackgroundColor:
+          //     _themeProvider!.themeMode().inputBackgroundColor!,
+          backgroundColor: currentTheme.backgroundColor),
+      messages: _messages,
+      onAttachmentPressed: _handleAtachmentPressed,
+      onMessageTap: _handleMessageTap,
+      onPreviewDataFetched: _handlePreviewDataFetched,
+      onSendPressed: _handleSendPressed,
+      user: _user,
     );
   }
 }
