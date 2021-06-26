@@ -106,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // TODO: implement initState
     themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    // FirestoreService().getCurrentUserDocData;
+    FirestoreService().getGroupData();
     super.initState();
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meeter/constants/constants.dart';
+import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/userModel.dart';
 
 class FirestoreService {
@@ -45,6 +46,19 @@ class FirestoreService {
           .get();
       print(snap.data());
       return userDataFromMap(jsonEncode(snap.data()));
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<UserData?> getGroupData() async {
+    try {
+      DocumentSnapshot snap = await FirebaseFirestore.instance
+          .collection("GROUPS")
+          .doc("eeDEFPR3nyPPWhnjJLUu")
+          .get();
+      print(snap.data());
+      groupModelFromMap(json.encode(snap.data()));
     } catch (e) {
       print(e);
     }
