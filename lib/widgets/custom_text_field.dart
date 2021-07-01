@@ -39,6 +39,7 @@ class CustomTextField extends StatelessWidget {
       decoration: BoxDecoration(
           boxShadow: [BoxShadow(color: Color(0x00000000), blurRadius: 11)]),
       child: TextFormField(
+        textInputAction: TextInputAction.next,
         controller: controller,
         inputFormatters: (maxLength == null)
             ? null

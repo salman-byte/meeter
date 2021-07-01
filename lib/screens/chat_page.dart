@@ -2,15 +2,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:meeter/utils/theme_notifier.dart';
+import 'package:meeter/widgets/custom_button.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -176,18 +179,161 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     ThemeData currentTheme = _themeProvider!.themeData();
-    return Chat(
-      theme: DefaultChatTheme(
-          // inputBorderRadius: BorderRadius.circular(30),
-          // inputBackgroundColor:
-          //     _themeProvider!.themeMode().inputBackgroundColor!,
-          backgroundColor: currentTheme.backgroundColor),
-      messages: _messages,
-      onAttachmentPressed: _handleAtachmentPressed,
-      onMessageTap: _handleMessageTap,
-      onPreviewDataFetched: _handlePreviewDataFetched,
-      onSendPressed: _handleSendPressed,
-      user: _user,
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Container(
+            child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text('username'),
+            ),
+            PopupMenuButton(onSelected: (value) {
+              buildShowAnimatedMeetingDialog(context);
+              print('pushing route');
+              // VxNavigator.of(context).push(Uri.parse('/meet'));
+            }, itemBuilder: (context) {
+              return <PopupMenuItem>[
+                PopupMenuItem(value: 1, child: Text('Start meeting')),
+                PopupMenuItem(value: 2, child: Text('Schedule meeting')),
+              ];
+            })
+          ],
+        )),
+        Divider(),
+        Expanded(
+          child: Chat(
+            theme: DefaultChatTheme(
+                // inputBorderRadius: BorderRadius.circular(30),
+                // inputBackgroundColor:
+                //     _themeProvider!.themeMode().inputBackgroundColor!,
+                backgroundColor: currentTheme.backgroundColor),
+            messages: _messages,
+            onAttachmentPressed: _handleAtachmentPressed,
+            onMessageTap: _handleMessageTap,
+            onPreviewDataFetched: _handlePreviewDataFetched,
+            onSendPressed: _handleSendPressed,
+            user: _user,
+          ),
+        ),
+      ],
     );
+  }
+
+  Future buildShowAnimatedMeetingDialog(BuildContext context) {
+    return showAnimatedDialog(
+      duration: Duration(seconds: 1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(child: MeetSettings());
+      },
+      animationType: DialogTransitionType.slideFromBottom,
+      curve: Curves.fastLinearToSlowEaseIn,
+    );
+  }
+}
+
+class MeetSettings extends StatefulWidget {
+  const MeetSettings({Key? key}) : super(key: key);
+
+  @override
+  _MeetSettingsState createState() => _MeetSettingsState();
+}
+
+class _MeetSettingsState extends State<MeetSettings> {
+  final subjectText = TextEditingController(text: "Subject");
+
+  bool? isAudioOnly = true;
+  bool? isAudioMuted = true;
+  bool? isVideoMuted = true;
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            height: 16.0,
+          ),
+          TextField(
+            controller: subjectText,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Subject",
+            ),
+          ),
+          SizedBox(
+            height: 14.0,
+          ),
+          CheckboxListTile(
+            title: Text("Audio Only"),
+            value: isAudioOnly,
+            onChanged: _onAudioOnlyChanged,
+          ),
+          SizedBox(
+            height: 14.0,
+          ),
+          CheckboxListTile(
+            title: Text("Audio Muted"),
+            value: isAudioMuted,
+            onChanged: _onAudioMutedChanged,
+          ),
+          SizedBox(
+            height: 14.0,
+          ),
+          CheckboxListTile(
+            title: Text("Video Muted"),
+            value: isVideoMuted,
+            onChanged: _onVideoMutedChanged,
+          ),
+          Divider(
+            height: 48.0,
+            thickness: 2.0,
+          ),
+          SizedBox(
+            height: 64.0,
+            width: double.maxFinite,
+            child: CustomButton(
+              onPressed: () {
+                VxNavigator.of(context).pop();
+                Future.delayed(Duration(seconds: 1), () {
+                  VxNavigator.of(context).push(Uri.parse('/meet'), params: {
+                    'am': isAudioMuted,
+                    'ao': isAudioOnly,
+                    'vm': isVideoMuted,
+                    'sub': subjectText.text
+                  });
+                });
+              },
+              text: "Join Meeting",
+            ),
+          ),
+          SizedBox(
+            height: 48.0,
+          ),
+        ],
+      ),
+    );
+  }
+
+  _onAudioOnlyChanged(bool? value) {
+    setState(() {
+      isAudioOnly = value;
+    });
+  }
+
+  _onAudioMutedChanged(bool? value) {
+    setState(() {
+      isAudioMuted = value;
+    });
+  }
+
+  _onVideoMutedChanged(bool? value) {
+    setState(() {
+      isVideoMuted = value;
+    });
   }
 }

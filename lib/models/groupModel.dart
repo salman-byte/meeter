@@ -17,26 +17,28 @@ class GroupModel {
     this.users,
     this.name,
     this.members,
-    this.modifiedAt,
-    this.createdAt,
+    required this.modifiedAt,
+    required this.createdAt,
     this.recentMessage,
     this.createdBy,
     this.id,
   });
 
   int? type;
-  dynamic? users;
+  List<String>? users;
   String? name;
   List<String>? members;
-  Timestamp? modifiedAt;
-  Timestamp? createdAt;
+  Timestamp modifiedAt;
+  Timestamp createdAt;
   RecentMessage? recentMessage;
   String? createdBy;
   String? id;
 
   factory GroupModel.fromMap(Map<String, dynamic> json) => GroupModel(
         type: json["type"] == null ? null : json["type"],
-        users: json["users"],
+        users: json["users"] == null
+            ? null
+            : List<String>.from(json["users"].map((x) => x)),
         name: json["name"] == null ? null : json["name"],
         members: json["members"] == null
             ? null
@@ -52,7 +54,8 @@ class GroupModel {
 
   Map<String, dynamic> toMap() => {
         "type": type == null ? null : type,
-        "users": users,
+        "users":
+            users == null ? null : List<dynamic>.from(users!.map((x) => x)),
         "name": name == null ? null : name,
         "members":
             members == null ? null : List<dynamic>.from(members!.map((x) => x)),
@@ -69,13 +72,13 @@ class RecentMessage {
     this.readBy,
     this.messageText,
     this.sentBy,
-    this.sentAt,
+    required this.sentAt,
   });
 
   List<String>? readBy;
   String? messageText;
   String? sentBy;
-  Timestamp? sentAt;
+  Timestamp sentAt;
 
   factory RecentMessage.fromMap(Map<String, dynamic> json) => RecentMessage(
         readBy: json["readBy"] == null
@@ -94,3 +97,27 @@ class RecentMessage {
         "sentAt": sentAt == null ? null : sentAt,
       };
 }
+
+// Timestamp timestampFromMap(String str) => Timestamp.fromMap(json.decode(str));
+
+// String timestampToMap(Timestamp data) => json.encode(data.toMap());
+
+// class Timestamp {
+//   Timestamp({
+//     required this.seconds,
+//     required this.nanoseconds,
+//   });
+
+//   String seconds;
+//   String nanoseconds;
+
+//   factory Timestamp.fromMap(Map<String, dynamic> json) => Timestamp(
+//         seconds: json["seconds"] == null ? null : json["seconds"],
+//         nanoseconds: json["nanoseconds"] == null ? null : json["nanoseconds"],
+//       );
+
+//   Map<String, dynamic> toMap() => {
+//         "seconds": seconds == null ? null : seconds,
+//         "nanoseconds": nanoseconds == null ? null : nanoseconds,
+//       };
+// }

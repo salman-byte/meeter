@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:velocity_x/velocity_x.dart';
-import 'services/emailAuthService.dart';
-import 'utils/theme_notifier.dart';
-import 'widgets/custom_text_field.dart';
-import 'widgets/custom_button.dart';
+import '../services/emailAuthService.dart';
+import '../utils/theme_notifier.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
 
 class SignInSignUpFlow extends StatefulWidget {
-  static final String path = "lib/src/pages/login/auth3.dart";
+  final bool inDialogMode;
 
+  const SignInSignUpFlow({Key? key, required this.inDialogMode})
+      : super(key: key);
   @override
   _SignInSignUpFlowState createState() => _SignInSignUpFlowState();
 }
@@ -46,7 +48,7 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
       passwordInputController.clear();
       confirmPasswordInputController.clear();
     } else {
-      context.pop();
+      if (widget.inDialogMode) context.pop();
     }
     return;
   }
@@ -65,7 +67,7 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
         error = true;
       });
     } else {
-      context.pop();
+      if (widget.inDialogMode) context.pop();
     }
     return;
   }
@@ -75,113 +77,133 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      body: Row(children: [
-        Flexible(
-            child: Image(
-          image: AssetImage('assets/meet_pic1.png'),
-        )),
-        Container(
-          width: context.percentWidth * 30,
-          child: AnimatedSwitcher(
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return ScaleTransition(
-                scale: animation,
-                child: child,
-              );
-            },
-            duration: const Duration(seconds: 1),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  // mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            error = false;
-                            _formsIndex = 1;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          color: _formsIndex == 1
-                              ? _themeProvider!.themeMode().themeColor
-                              : Colors.white,
-                          child: Text(
-                            "Login",
-                            style: TextStyle(
-                                fontSize: 15,
-                                color: _formsIndex == 1
-                                    ? Colors.white
-                                    : Colors.black),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10.0),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            error = false;
-                            _formsIndex = 2;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          color: _formsIndex == 2
-                              ? _themeProvider!.themeMode().themeColor
-                              : Colors.white,
-                          child: Text(
-                            "Signup",
-                            style: TextStyle(
-                                fontSize: 15,
-                                color: _formsIndex == 2
-                                    ? Colors.white
-                                    : Colors.black),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                error == true
-                    ? Container(
+      body: VxDevice(
+        mobile: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            buildFlexibleShowCaseImage(),
+            buildSignInSignUpForm(context),
+          ]),
+        ),
+        web: Row(children: [
+          buildFlexibleShowCaseImage(),
+          buildSignInSignUpForm(context),
+        ]),
+      ),
+    );
+  }
+
+  Flexible buildSignInSignUpForm(BuildContext context) {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: AnimatedSwitcher(
+          // transitionBuilder: (Widget child, Animation<double> animation) {
+          //   return ScaleTransition(
+          //     alignment: Alignment.bottomCenter,
+          //     scale: animation,
+          //     child: child,
+          //   );
+          // },
+          duration: const Duration(seconds: 5),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          error = false;
+                          _formsIndex = 1;
+                        });
+                      },
+                      child: Container(
                         padding: EdgeInsets.all(10),
-                        margin: const EdgeInsets.only(top: 16.0, left: 16.0),
-                        color: Colors.red,
-                        child: Text(errorMsg!),
-                      )
-                    : Container(),
-                Container(
-                  child: _formsIndex == 1
-                      ? LoginForm(
-                          usernameInputController: usernameInputController,
-                          passwordInputController: passwordInputController,
-                          onLoginPressed: () {
-                            _loginUser();
-                          },
-                        )
-                      : SignupForm(
-                          confirmPasswordInputController:
-                              confirmPasswordInputController,
-                          usernameInputController: usernameInputController,
-                          passwordInputController: passwordInputController,
-                          onSignUpPressed: () {
-                            _signUpUser();
-                          },
+                        color: _formsIndex == 1
+                            ? _themeProvider!.themeMode().themeColor
+                            : Colors.white,
+                        child: Text(
+                          "Login",
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: _formsIndex == 1
+                                  ? Colors.white
+                                  : Colors.black),
                         ),
-                )
-              ],
-            ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          error = false;
+                          _formsIndex = 2;
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        color: _formsIndex == 2
+                            ? _themeProvider!.themeMode().themeColor
+                            : Colors.white,
+                        child: Text(
+                          "Signup",
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: _formsIndex == 2
+                                  ? Colors.white
+                                  : Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10.0),
+              error == true
+                  ? Container(
+                      padding: EdgeInsets.all(10),
+                      margin: const EdgeInsets.only(top: 16.0, left: 16.0),
+                      color: Colors.red,
+                      child: Text(errorMsg!),
+                    )
+                  : Container(),
+              Container(
+                child: _formsIndex == 1
+                    ? LoginForm(
+                        usernameInputController: usernameInputController,
+                        passwordInputController: passwordInputController,
+                        onLoginPressed: () {
+                          _loginUser();
+                        },
+                      )
+                    : SignupForm(
+                        confirmPasswordInputController:
+                            confirmPasswordInputController,
+                        usernameInputController: usernameInputController,
+                        passwordInputController: passwordInputController,
+                        onSignUpPressed: () {
+                          _signUpUser();
+                        },
+                      ),
+              )
+            ],
           ),
         ),
-      ]),
+      ),
     );
+  }
+
+  Flexible buildFlexibleShowCaseImage() {
+    return Flexible(
+        child: Image(
+      image: AssetImage('assets/meet_pic1.png'),
+    ));
   }
 }
 

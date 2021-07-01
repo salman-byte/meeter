@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:meeter/models/groupModel.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
@@ -12,8 +15,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
 
-import 'authUI.dart';
-import 'meet_screen.dart';
+import 'screens/authUI.dart';
+import 'screens/meet_screen.dart';
 import 'utils/authStatusNotifier.dart';
 import 'utils/theme_notifier.dart';
 
@@ -71,6 +74,16 @@ class _MyAppState extends State<MyApp> {
     routes: {
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+      '/meet': (uri, params) {
+        print('in the /meet block');
+        return MaterialPage(
+            child: Meeting(
+          isAudioMuted: params['am'],
+          isAudioOnly: params['ao'],
+          isVideoMuted: params['vm'],
+          subject: params['sub'],
+        ));
+      }
     },
   );
   @override
@@ -106,7 +119,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // TODO: implement initState
     themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    FirestoreService().getGroupData();
+    // FirestoreService().getGroupData();
+    // FirestoreService().createGroupDoc(GroupModel(
+    //     createdAt: Timestamp.fromDate(DateTime.now()),
+    //     id: "abcdefghijklllllllllll",
+    //     modifiedAt: Timestamp.fromDate(DateTime.now()),
+    //     name: "Random topic",
+    //     createdBy: 'dasfsfdssdsdfsd'));
     super.initState();
   }
 
@@ -117,8 +136,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: buildAppBar(),
       body: VxDevice(
-        mobile: buildMainScreenForMobile(context),
-        web: buildMainScreenForWeb(context),
+        mobile: MobileViewPageBody(),
+        // mobile: WebViewPageBody(),
+        web: WebViewPageBody(),
       ),
     );
   }
@@ -135,28 +155,28 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         SizedBox(width: 10),
         Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
-          return PopupMenuButton(
-            onSelected: (value) {
-              showAnimatedDialog(
-                duration: Duration(seconds: 1),
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return Dialog(child: SignInSignUpFlow());
-                },
-                animationType: DialogTransitionType.slideFromBottom,
-                curve: Curves.fastLinearToSlowEaseIn,
-              );
-            },
-            initialValue: null,
-            child: authData.isUserAuthenticated
-                ? CircleAvatar(
-                    radius: 30.0,
-                    backgroundImage:
-                        NetworkImage(authData.currentUser!.photoUrl!),
-                    backgroundColor: Colors.transparent,
-                  )
-                : ClipRRect(
+          return !(authData.isUserAuthenticated)
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(20.0), //or 15.0
+                  child: Container(
+                    // height: 70.0,
+                    // width: 70.0,
+                    color: Color(0xffFF0E58),
+                    child: Icon(Icons.person, color: Colors.white, size: 50.0),
+                  ),
+                )
+              : PopupMenuButton(
+                  onSelected: (value) {
+                    switch (value) {
+                      case 2:
+                        FirebaseAuth.instance.signOut();
+                        break;
+                      default:
+                        buildShowAnimatedSignUpDialog(context);
+                    }
+                  },
+                  initialValue: null,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(20.0), //or 15.0
                     child: Container(
                       // height: 70.0,
@@ -166,52 +186,126 @@ class _MyHomePageState extends State<MyHomePage> {
                           Icon(Icons.person, color: Colors.white, size: 50.0),
                     ),
                   ),
-            itemBuilder: (context) {
-              return List.generate(5, (index) {
-                return PopupMenuItem(
-                  value: index,
-                  child: Text('button no $index'),
+                  itemBuilder: (context) {
+                    return <PopupMenuItem>[
+                      PopupMenuItem(
+                        value: 0,
+                        child: Text('settings'),
+                      ),
+                      PopupMenuItem(
+                        value: 1,
+                        child: Text('invite'),
+                      ),
+                      PopupMenuItem(
+                        value: 2,
+                        child: Text('logout'),
+                      )
+                    ];
+                  },
                 );
-              });
-            },
-          );
         }),
       ],
     );
   }
 
-  Center buildMainScreenForMobile(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            'This app is under construction 🚧',
-            style: Theme.of(context).textTheme.headline6,
-          ),
-          Text(
-            'visit sometime later',
-            style: Theme.of(context).textTheme.headline4,
-          ),
-        ],
-      ),
+  Future buildShowAnimatedSignUpDialog(BuildContext context) {
+    return showAnimatedDialog(
+      duration: Duration(seconds: 1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+            child: SignInSignUpFlow(
+          inDialogMode: true,
+        ));
+      },
+      animationType: DialogTransitionType.slideFromBottom,
+      curve: Curves.fastLinearToSlowEaseIn,
     );
   }
+}
 
-  Row buildMainScreenForWeb(BuildContext context) {
-    // showDialog(
-    //     context: context, builder: (context) => Dialog(child: LoginScreen()));
-    return Row(
-      children: [
-        Container(
-          width: context.percentWidth * 30,
-          child: ChatGroupList(),
+class MobileViewPageBody extends StatelessWidget {
+  const MobileViewPageBody({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
+      return !(authData.isUserAuthenticated)
+          ? SignInSignUpFlow(
+              inDialogMode: false,
+            )
+          : Container(
+              width: context.percentWidth * 30,
+              child: ChatGroupList(),
+            );
+    });
+  }
+}
+
+class WebViewPageBody extends StatelessWidget {
+  const WebViewPageBody({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
+      return (authData.isUserAuthenticated)
+          ? Row(
+              children: [
+                Container(
+                  width: context.percentWidth * 30,
+                  child: TabBarPageView(),
+                ),
+                VerticalDivider(),
+                Expanded(
+                  child: ChatPage(),
+                ),
+              ],
+            )
+          : SignInSignUpFlow(
+              inDialogMode: false,
+            );
+    });
+  }
+}
+
+class TabBarPageView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: new PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight),
+          child: new Container(
+            child: new SafeArea(
+              child: Column(
+                children: <Widget>[
+                  new Expanded(child: new Container()),
+                  new TabBar(
+                    tabs: [
+                      Tab(icon: Icon(Icons.chat)),
+                      Tab(icon: Icon(Icons.person)),
+                      Tab(icon: Icon(Icons.more)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        VerticalDivider(),
-        Expanded(
-          child: ChatPage(),
+        body: TabBarView(
+          children: [
+            ChatGroupList(),
+            Icon(Icons.directions_transit),
+            Icon(Icons.more),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

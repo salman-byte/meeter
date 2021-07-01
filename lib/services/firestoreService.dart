@@ -26,6 +26,18 @@ class FirestoreService {
     }
   }
 
+//create Group document in database
+  Future createGroupDoc(GroupModel groupData) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("GROUPS")
+          .doc()
+          .set(groupData.toMap());
+    } catch (e) {
+      print(e);
+    }
+  }
+
   // get currentUserDataFromDB stream
   // Stream<UserData> get currentUserDocFromDBMappedIntoLocalUserData {
   //   try {
@@ -55,10 +67,16 @@ class FirestoreService {
     try {
       DocumentSnapshot snap = await FirebaseFirestore.instance
           .collection("GROUPS")
-          .doc("eeDEFPR3nyPPWhnjJLUu")
+          .doc("6h1tbS26hPoGXNjcI7sn")
           .get();
-      print(snap.data());
-      groupModelFromMap(json.encode(snap.data()));
+      print((snap.data() as Map)['createdAt'].toString());
+      // print(jsonEncode(snap.data(), toEncodable: (object) {
+      //   return timestampToMap(timestampFromMap(object.toString()));
+      // }));
+      // groupModelFromMap(json.encode(snap.data()));
+      GroupModel groupData =
+          GroupModel.fromMap(snap.data() as Map<String, dynamic>);
+      print(groupData.id);
     } catch (e) {
       print(e);
     }
