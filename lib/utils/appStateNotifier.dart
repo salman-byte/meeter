@@ -9,5 +9,9 @@ class AppStateNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  rebuildWidget() {
+    notifyListeners();
+  }
+
   GroupModel? get getCurrentSelectedChat => _currentSelectedChatGroup;
 }

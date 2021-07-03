@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
-import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/userModel.dart';
@@ -277,7 +276,7 @@ class WebViewPageBody extends StatelessWidget {
                   child: Consumer<AppStateNotifier>(
                       builder: (context, appstate, child) =>
                           appstate.getCurrentSelectedChat != null
-                              ? ChatPage()
+                              ? new ChatPage()
                               : Container()),
                 ),
               ],

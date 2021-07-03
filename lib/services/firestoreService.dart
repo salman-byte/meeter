@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:meeter/constants/constants.dart';
 import 'package:meeter/models/groupModel.dart';
+import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/models/userModel.dart';
+import 'package:meeter/services/firebaseStorageService.dart';
 
 class FirestoreService {
   FirestoreService._privateConstructor() {
@@ -49,6 +52,49 @@ class FirestoreService {
       return;
     } catch (e) {
       print(e);
+    }
+  }
+
+//create Message document in database
+  Future createMessageDoc(MessageModel message, String groupId) async {
+    try {
+      if (message.type == Type.IMAGE) {
+        // message.uri = await FirebaseStorageService.instance
+        //     .uploadImageAndGetUrl(
+        //         imgName: message.name ?? '', file: PickedFile(message.uri!));
+      }
+      if (message.type == Type.FILE) {
+        // message.uri = await FirebaseStorageService.instance
+        //     .uploadDocumentAndGetUrl(
+        //         docName: message.name ?? '', file: PickedFile(message.uri!));
+      }
+      await FirebaseFirestore.instance
+          .collection(MESSAGES_COLLECTION)
+          .doc(groupId)
+          .collection(MESSAGES_COLLECTION)
+          .doc()
+          .set(message.toMap());
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//get Messages as stream from database
+  Stream<List<MessageModel>> getMessagesAsStreamFromDataBase(String groupId) {
+    try {
+      return FirebaseFirestore.instance
+          .collection(MESSAGES_COLLECTION)
+          .doc(groupId)
+          .collection(MESSAGES_COLLECTION)
+          .orderBy("createdAt", descending: true)
+          .snapshots()
+          .map((event) =>
+              event.docs.map((e) => MessageModel.fromMap(e.data())).toList());
+      // .set(message.toMap());
+    } catch (e) {
+      print(e);
+      return Stream.empty();
     }
   }
 

@@ -77,7 +77,7 @@ class Author {
     this.imageUrl,
   });
 
-  FirstName? firstName;
+  String? firstName;
   String? id;
   String? imageUrl;
 
@@ -86,25 +86,17 @@ class Author {
   String toJson() => json.encode(toMap());
 
   factory Author.fromMap(Map<String, dynamic> json) => Author(
-        firstName: json["firstName"] == null
-            ? null
-            : firstNameValues.map[json["firstName"]],
+        firstName: json["firstName"] == null ? null : json["firstName"],
         id: json["id"] == null ? null : json["id"],
         imageUrl: json["imageUrl"] == null ? null : json["imageUrl"],
       );
 
   Map<String, dynamic> toMap() => {
-        "firstName":
-            firstName == null ? null : firstNameValues.reverse[firstName],
+        "firstName": firstName == null ? null : firstName,
         "id": id == null ? null : id,
         "imageUrl": imageUrl == null ? null : imageUrl,
       };
 }
-
-enum FirstName { ALEX, DARIA }
-
-final firstNameValues =
-    EnumValues({"Alex": FirstName.ALEX, "Daria": FirstName.DARIA});
 
 enum Status { SEEN }
 

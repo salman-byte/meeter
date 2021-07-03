@@ -7,6 +7,10 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:meeter/models/messageModel.dart';
+import 'package:meeter/services/firebaseStorageService.dart';
+import 'package:meeter/services/firestoreService.dart';
+import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:meeter/utils/theme_notifier.dart';
 import 'package:meeter/widgets/custom_button.dart';
 import 'package:mime/mime.dart';
@@ -24,17 +28,45 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
+  String? currentGroupId;
   ThemeProvider? _themeProvider;
-  final _user = const types.User(id: '06c33e8b-e835-4736-80f4-63f44b66666c');
+  AppStateNotifier? appStateNotifier;
+  final _user = types.User(id: FirestoreService.instance.firebaseUser!.uid);
+  Stream<List<MessageModel>>? _messageStream;
 
   @override
   void initState() {
     super.initState();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    appStateNotifier = Provider.of<AppStateNotifier>(context, listen: false);
+    currentGroupId = appStateNotifier!.getCurrentSelectedChat!.id;
+    // _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
+    //     appStateNotifier!.getCurrentSelectedChat!.id!);
+    // _loadMessages();
+    initializeChats();
+  }
+
+  initializeChats() {
+    currentGroupId = appStateNotifier!.getCurrentSelectedChat!.id;
+    _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
+        appStateNotifier!.getCurrentSelectedChat!.id!);
     _loadMessages();
   }
 
+  @override
+  void dispose() {
+    // _messageStream.s
+    _messages.clear();
+    super.dispose();
+  }
+
   void _addMessage(types.Message message) {
+    // print(message.toJson());
+    MessageModel newMessage =
+        MessageModel.fromJson(jsonEncode(message.toJson()));
+    print(newMessage.toMap());
+    FirestoreService.instance.createMessageDoc(
+        newMessage, appStateNotifier!.getCurrentSelectedChat!.id!);
     setState(() {
       _messages.insert(0, message);
     });
@@ -89,6 +121,8 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     if (result != null) {
+      final uri = await FirebaseStorageService.instance.uploadImageAndGetUrl(
+          imgName: result.files.single.name, data: result.files.single.bytes!);
       final message = types.FileMessage(
         author: _user,
         createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -96,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
         id: const Uuid().v4(),
         mimeType: lookupMimeType(result.files.single.path ?? ''),
         size: result.files.single.size,
-        uri: result.files.single.path ?? '',
+        uri: uri,
       );
 
       _addMessage(message);
@@ -116,7 +150,8 @@ class _ChatPageState extends State<ChatPage> {
       final bytes = await result.readAsBytes();
       final image = await decodeImageFromList(bytes);
       final name = result.path.split('/').last;
-
+      final uri = await FirebaseStorageService.instance
+          .uploadImageAndGetUrl(imgName: name, data: bytes);
       final message = types.ImageMessage(
         author: _user,
         createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -124,10 +159,11 @@ class _ChatPageState extends State<ChatPage> {
         id: const Uuid().v4(),
         name: name,
         size: bytes.length,
-        uri: result.path,
+        uri: uri,
         width: image.width.toDouble(),
       );
-
+      print(message.uri);
+      print(result.path);
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -161,66 +197,88 @@ class _ChatPageState extends State<ChatPage> {
       id: const Uuid().v4(),
       text: message.text,
     );
+    // MessageModel newMessage = MessageModel(
+    //   text: textMessage.text,
+    //   author: Author(te)
+    // );
 
     _addMessage(textMessage);
   }
 
   void _loadMessages() async {
-    final response = await rootBundle.loadString('assets/messages.json');
-    final messages = (jsonDecode(response) as List)
-        .map((e) => types.Message.fromJson(e as Map<String, dynamic>))
-        .toList();
-
-    setState(() {
+    List<types.Message> messages = <types.Message>[];
+    _messageStream!.listen((event) {}).onData((data) {
+      data.forEach((e) {
+        if (!messages.contains(types.Message.fromJson(e.toMap())))
+          messages.add(types.Message.fromJson(e.toMap()));
+      });
+      // print(messages);
       _messages = messages;
+      // setState(() {
+      // });
+      appStateNotifier!.rebuildWidget();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     ThemeData currentTheme = _themeProvider!.themeData();
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Container(
-            child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Text('username'),
+    return Consumer<AppStateNotifier>(builder: (context, appstate, child) {
+      if (currentGroupId != appstate.getCurrentSelectedChat!.id) {
+        appStateNotifier = appstate;
+        initializeChats();
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Container(
+              child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Text(appstate.getCurrentSelectedChat!.name!),
+              ),
+              PopupMenuButton(onSelected: (value) {
+                buildShowAnimatedMeetingDialog(context);
+                print('pushing route');
+                // VxNavigator.of(context).push(Uri.parse('/meet'));
+              }, itemBuilder: (context) {
+                return <PopupMenuItem>[
+                  PopupMenuItem(value: 1, child: Text('Start meeting')),
+                  PopupMenuItem(value: 2, child: Text('Schedule meeting')),
+                ];
+              })
+            ],
+          )),
+          Divider(),
+          // (appstate.getCurrentSelectedChat!.id != widget.groupId ||
+          //         _messages.length == 0)
+          //     ?
+          //     // _messages.clear()
+          //     // _loadMessages();
+
+          //     LinearProgressIndicator()
+          //     : Container(),
+          Expanded(
+            child: new Chat(
+              theme: DefaultChatTheme(
+                  // inputBorderRadius: BorderRadius.circular(30),
+                  // inputBackgroundColor:
+                  //     _themeProvider!.themeMode().inputBackgroundColor!,
+                  backgroundColor: currentTheme.backgroundColor),
+              messages: _messages,
+              onAttachmentPressed: _handleAtachmentPressed,
+              onMessageTap: _handleMessageTap,
+              onPreviewDataFetched: _handlePreviewDataFetched,
+              onSendPressed: _handleSendPressed,
+              user: _user,
             ),
-            PopupMenuButton(onSelected: (value) {
-              buildShowAnimatedMeetingDialog(context);
-              print('pushing route');
-              // VxNavigator.of(context).push(Uri.parse('/meet'));
-            }, itemBuilder: (context) {
-              return <PopupMenuItem>[
-                PopupMenuItem(value: 1, child: Text('Start meeting')),
-                PopupMenuItem(value: 2, child: Text('Schedule meeting')),
-              ];
-            })
-          ],
-        )),
-        Divider(),
-        Expanded(
-          child: Chat(
-            theme: DefaultChatTheme(
-                // inputBorderRadius: BorderRadius.circular(30),
-                // inputBackgroundColor:
-                //     _themeProvider!.themeMode().inputBackgroundColor!,
-                backgroundColor: currentTheme.backgroundColor),
-            messages: _messages,
-            onAttachmentPressed: _handleAtachmentPressed,
-            onMessageTap: _handleMessageTap,
-            onPreviewDataFetched: _handlePreviewDataFetched,
-            onSendPressed: _handleSendPressed,
-            user: _user,
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Future buildShowAnimatedMeetingDialog(BuildContext context) {
