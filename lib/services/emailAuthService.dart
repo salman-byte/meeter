@@ -15,7 +15,7 @@ class EmailAuth {
         email: email,
         password: password,
       );
-      await FirestoreService().createUserDoc(UserData(
+      await FirestoreService.instance.createUserDoc(UserData(
         email: email,
         uid: userCredential.user!.uid,
         displayName: 'Nishit Dixit',

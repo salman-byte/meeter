@@ -10,6 +10,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final String? prefixText;
   final String? hintText;
+  final String? labelText;
   final String? initialValue;
   final bool? multiLines;
   final int? maxLines;
@@ -30,7 +31,8 @@ class CustomTextField extends StatelessWidget {
       this.onChanged,
       this.maxLines,
       this.obscureText = false,
-      this.controller})
+      this.controller,
+      this.labelText})
       : super(key: key);
 
   @override
@@ -62,6 +64,7 @@ class CustomTextField extends StatelessWidget {
                 : null
             : 1,
         decoration: InputDecoration(
+          labelText: labelText ?? null,
           border: OutlineInputBorder(),
           hintText: hintText ?? null,
           prefix: (prefixText != null) ? Text(prefixText!) : null,

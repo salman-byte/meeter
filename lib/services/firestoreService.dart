@@ -1,21 +1,34 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meeter/constants/constants.dart';
 import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/userModel.dart';
 
 class FirestoreService {
+  FirestoreService._privateConstructor() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      firebaseUser = user;
+    });
+  }
+
+  /// Current logged in user in Firebase. Does not update automatically.
+  /// Use [FirebaseAuth.authStateChanges] to listen to the state changes.
+  User? firebaseUser = FirebaseAuth.instance.currentUser;
+
+  /// Singleton instance
+  static final FirestoreService instance =
+      FirestoreService._privateConstructor();
+
   // final String phoneNo;
 
   // FirestoreService({this.phoneNo});
   // collection reference
   final CollectionReference userDataCollectionRefrence =
       FirebaseFirestore.instance.collection(USERS_COLLECTION);
-  // final CollectionReference natureWallpaperCollectionRefrence =
-  //     FirebaseFirestore.instance.collection(NATURE_WALLPAPER_COLLECTION);
-  // final CollectionReference wallpaperCollectionReference =
-  //     FirebaseFirestore.instance.collection(WALLPAPERS_COLLECTION);
+  final CollectionReference groupDataCollectionRefrence =
+      FirebaseFirestore.instance.collection(GROUPS_COLLECTION);
 
 //create user document in database
   Future createUserDoc(UserData userData) async {
@@ -63,59 +76,47 @@ class FirestoreService {
     }
   }
 
-  Future<UserData?> getGroupData() async {
+  /// Returns a stream of all users from Firebase
+  Stream<List<UserData>> usersListAsStream() {
+    // if (firebaseUser == null) return const Stream.empty();
+    return userDataCollectionRefrence.snapshots().map(
+          (snapshot) => snapshot.docs.fold<List<UserData>>(
+            [],
+            (previousValue, element) {
+              return [
+                ...previousValue,
+                UserData.fromMap(element.data() as Map<String, dynamic>)
+              ];
+            },
+          ),
+        );
+  }
+
+  /// Returns a stream of all Groups from Firebase
+  Stream<List<GroupModel>> getGroupsListAsStream() {
+    print('dsfsfsddsf');
     try {
-      DocumentSnapshot snap = await FirebaseFirestore.instance
-          .collection("GROUPS")
-          .doc("6h1tbS26hPoGXNjcI7sn")
-          .get();
-      print((snap.data() as Map)['createdAt'].toString());
-      // print(jsonEncode(snap.data(), toEncodable: (object) {
-      //   return timestampToMap(timestampFromMap(object.toString()));
-      // }));
-      // groupModelFromMap(json.encode(snap.data()));
-      GroupModel groupData =
-          GroupModel.fromMap(snap.data() as Map<String, dynamic>);
-      print(groupData.id);
+      return groupDataCollectionRefrence.snapshots().map((snapshot) {
+        final data = snapshot.docs.map((e) {
+          return GroupModel.fromMap(e.data() as Map<String, dynamic>);
+        }).toList();
+        print(data.length);
+        return data;
+      });
     } catch (e) {
       print(e);
+      return Stream.empty();
     }
   }
 
-  // Future<DocumentWithCountModel> natureWallpaperData({int docNumber}) async {
-  //   try {
-  //     DocumentWithCountModel completeDocData;
-  //     UrLdocument document = await natureWallpaperCollectionRefrence
-  //         .doc('stack$docNumber')
-  //         .get()
-  //         .then((value) => UrLdocument.fromMap(value.data()));
-  //     int count = await wallpaperCollectionReference
-  //         .doc('category_count')
-  //         .get()
-  //         .then((snap) => snap.data()['nature_wallpaper']);
-  //     completeDocData = DocumentWithCountModel(document, count);
-  //     return completeDocData;
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  // }
-
-  // Future<void> uploadImageToStorageAndAddUrlToDocumentWithCountIncrement(
-  //     FirebaseStorageService storageService, PickedFile imageFile) async {
-  //   int count = await wallpaperCollectionReference
-  //       .doc('category_count')
-  //       .get()
-  //       .then((snap) => snap.data()['nature_wallpaper']);
-  //   int stackNumberFilled = (count / 10).floor();
-  //   int urlNumberFilled = (count % 10);
-  //   String imageUrl =
-  //       await storageService.uploadWallpaperAndGetUrl(file: imageFile);
-  //   await natureWallpaperCollectionRefrence
-  //       .doc('stack${stackNumberFilled + 1}')
-  //       .update({'url${urlNumberFilled + 1}': imageUrl});
-  //   await wallpaperCollectionReference
-  //       .doc('category_count')
-  //       .update({'nature_wallpaper': FieldValue.increment(1)});
-  //   return;
-  // }
+  Future<List<UserData>> getAllUsers() {
+    try {
+      return userDataCollectionRefrence.get().then((value) => value.docs
+          .map((e) => UserData.fromMap(e.data() as Map<String, dynamic>))
+          .toList());
+    } catch (e) {
+      print(e);
+      return Future.value(<UserData>[]);
+    }
+  }
 }

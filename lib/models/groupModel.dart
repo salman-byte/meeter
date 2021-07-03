@@ -28,8 +28,8 @@ class GroupModel {
   List<String>? users;
   String? name;
   List<String>? members;
-  Timestamp modifiedAt;
-  Timestamp createdAt;
+  Timestamp? modifiedAt;
+  Timestamp? createdAt;
   RecentMessage? recentMessage;
   String? createdBy;
   String? id;
@@ -43,8 +43,11 @@ class GroupModel {
         members: json["members"] == null
             ? null
             : List<String>.from(json["members"].map((x) => x)),
-        modifiedAt: json["modifiedAt"] == null ? null : json["modifiedAt"],
-        createdAt: json["createdAt"] == null ? null : json["createdAt"],
+        modifiedAt: json["modifiedAt"] == null
+            ? null
+            : json["modifiedAt"] as Timestamp?,
+        createdAt:
+            json["createdAt"] == null ? null : json["createdAt"] as Timestamp?,
         recentMessage: json["recentMessage"] == null
             ? null
             : RecentMessage.fromMap(json["recentMessage"]),
@@ -78,7 +81,7 @@ class RecentMessage {
   List<String>? readBy;
   String? messageText;
   String? sentBy;
-  Timestamp sentAt;
+  Timestamp? sentAt;
 
   factory RecentMessage.fromMap(Map<String, dynamic> json) => RecentMessage(
         readBy: json["readBy"] == null
@@ -86,7 +89,7 @@ class RecentMessage {
             : List<String>.from(json["readBy"].map((x) => x)),
         messageText: json["messageText"] == null ? null : json["messageText"],
         sentBy: json["sentBy"] == null ? null : json["sentBy"],
-        sentAt: json["sentAt"] == null ? null : json["sentAt"],
+        sentAt: json["sentAt"] == null ? null : json["sentAt"] as Timestamp?,
       );
 
   Map<String, dynamic> toMap() => {

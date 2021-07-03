@@ -1,1 +1,2 @@
 const String USERS_COLLECTION = 'USERS';
+const String GROUPS_COLLECTION = 'GROUPS';

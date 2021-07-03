@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,19 +8,25 @@ import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:meeter/models/groupModel.dart';
+import 'package:meeter/models/userModel.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
 import 'package:meeter/services/firestoreService.dart';
+import 'package:meeter/utils/appStateNotifier.dart';
+import 'package:meeter/utils/create_group.dart';
 import 'package:meeter/widgets/chat_list_tile.dart';
+import 'package:meeter/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
 
+import 'constants/constants.dart';
 import 'screens/authUI.dart';
 import 'screens/meet_screen.dart';
 import 'utils/authStatusNotifier.dart';
 import 'utils/theme_notifier.dart';
+import 'widgets/custom_text_field.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +50,10 @@ class AppStart extends StatelessWidget {
   Widget build(BuildContext context) {
     ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthStatusNotifier())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthStatusNotifier()),
+        ChangeNotifierProvider(create: (_) => AppStateNotifier()),
+      ],
       child: MyApp(
         themeProvider: themeProvider,
       ),
@@ -120,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // TODO: implement initState
     themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     // FirestoreService().getGroupData();
+    // FirestoreService().getGroupsListAsStream();
     // FirestoreService().createGroupDoc(GroupModel(
     //     createdAt: Timestamp.fromDate(DateTime.now()),
     //     id: "abcdefghijklllllllllll",
@@ -253,7 +265,7 @@ class WebViewPageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
-      return (authData.isUserAuthenticated)
+      return !(authData.isUserAuthenticated)
           ? Row(
               children: [
                 Container(
@@ -262,7 +274,11 @@ class WebViewPageBody extends StatelessWidget {
                 ),
                 VerticalDivider(),
                 Expanded(
-                  child: ChatPage(),
+                  child: Consumer<AppStateNotifier>(
+                      builder: (context, appstate, child) =>
+                          appstate.getCurrentSelectedChat != null
+                              ? ChatPage()
+                              : Container()),
                 ),
               ],
             )
@@ -279,33 +295,55 @@ class TabBarPageView extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: new PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight),
-          child: new Container(
-            child: new SafeArea(
-              child: Column(
-                children: <Widget>[
-                  new Expanded(child: new Container()),
-                  new TabBar(
+        appBar: AppBar(
+          actions: [
+            new Container(
+              child: IconButton(
+                icon: Icon(Icons.group_add),
+                onPressed: () {
+                  showCreateGroupDialog(context);
+                },
+              ),
+            ),
+          ],
+          bottom: new PreferredSize(
+            preferredSize: Size(double.infinity, kToolbarHeight),
+            child: Column(
+              children: [
+                Container(
+                  child: new TabBar(
                     tabs: [
                       Tab(icon: Icon(Icons.chat)),
-                      Tab(icon: Icon(Icons.person)),
+                      Tab(icon: Icon(Icons.people)),
                       Tab(icon: Icon(Icons.more)),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
         body: TabBarView(
           children: [
             ChatGroupList(),
-            Icon(Icons.directions_transit),
+            AllUsersList(),
             Icon(Icons.more),
           ],
         ),
       ),
+    );
+  }
+
+  Future showCreateGroupDialog(BuildContext context) {
+    return showAnimatedDialog(
+      duration: Duration(seconds: 1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(child: PersonNameInputWidget());
+      },
+      animationType: DialogTransitionType.slideFromBottom,
+      curve: Curves.fastLinearToSlowEaseIn,
     );
   }
 }
@@ -318,38 +356,63 @@ class ChatGroupList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<List<types.User>>(
-        stream: FirebaseChatCore.instance.users(),
-        initialData: const [],
-        builder: (context, snapshot) {
+      body: StreamBuilder(
+        stream: FirestoreService.instance.getGroupsListAsStream(),
+        builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
+          if (!snapshot.hasData) return LinearProgressIndicator();
+          return Consumer<AppStateNotifier>(
+            builder: (context, appState, child) {
+              String? currentSelectedChatId =
+                  appState.getCurrentSelectedChat?.id ?? '';
+              return ListView.builder(
+                  itemCount: snapshot.data != null ? snapshot.data!.length : 0,
+                  itemBuilder: (context, index) {
+                    print(currentSelectedChatId);
+                    // return Container();
+                    return ChatListTile(
+                        isSelected:
+                            snapshot.data![index].id == currentSelectedChatId,
+                        onTileTap: () {
+                          appState.setCurrentSelectedChat =
+                              snapshot.data![index];
+                        },
+                        title: snapshot.data![index].name!,
+                        subTitle: '',
+                        avatorUrl: '',
+                        trailingText: '');
+                  });
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AllUsersList extends StatelessWidget {
+  const AllUsersList({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StreamBuilder(
+        stream: FirestoreService.instance.usersListAsStream(),
+        builder: (context, AsyncSnapshot<List<UserData>> snapshot) {
+          if (!snapshot.hasData) return LinearProgressIndicator();
           return ListView.builder(
-              itemCount: snapshot.data!.length,
+              itemCount: snapshot.data != null ? snapshot.data!.length : 0,
               itemBuilder: (context, index) {
+                // return Container();
                 return ChatListTile(
-                    title: snapshot.data![index].firstName!,
+                    title: snapshot.data![index].displayName!,
                     subTitle: '',
-                    avatorUrl: snapshot.data![index].imageUrl!,
+                    avatorUrl: '',
                     trailingText: '');
               });
         },
       ),
     );
-    // return ListView(
-    //   children: ListTile.divideTiles(
-    //     context: context,
-    //     tiles: [
-    //       ChatListTile(
-    //           title: 'title',
-    //           subTitle: 'subTitle',
-    //           avatorUrl: 'avatorUrl',
-    //           trailingText: 'trailingText'),
-    //       ChatListTile(
-    //           title: 'title',
-    //           subTitle: 'subTitle',
-    //           avatorUrl: 'avatorUrl',
-    //           trailingText: 'trailingText'),
-    //     ],
-    //   ).toList(),
-    // );
   }
 }

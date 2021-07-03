@@ -24,7 +24,9 @@ class AuthStatusNotifier extends ChangeNotifier {
   }
 
   setCurrentUser({required String uid}) async {
-    await FirestoreService().getCurrentUserDocData(uid: uid).then((value) {
+    await FirestoreService.instance
+        .getCurrentUserDocData(uid: uid)
+        .then((value) {
       if (value != null) {
         _currentLoggedInUser = value;
       }

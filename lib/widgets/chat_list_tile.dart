@@ -5,17 +5,24 @@ class ChatListTile extends StatelessWidget {
   final String subTitle;
   final String avatorUrl;
   final String trailingText;
+  final bool isSelected;
+
+  final void Function()? onTileTap;
   const ChatListTile(
       {Key? key,
       required this.title,
       required this.subTitle,
       required this.avatorUrl,
-      required this.trailingText})
+      required this.trailingText,
+      this.onTileTap,
+      this.isSelected = false})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      selected: isSelected,
+      onTap: onTileTap,
       title: Text(title),
       subtitle: Text(subTitle),
       leading: ClipRRect(
