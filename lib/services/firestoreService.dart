@@ -44,8 +44,9 @@ class FirestoreService {
     try {
       await FirebaseFirestore.instance
           .collection("GROUPS")
-          .doc()
+          .doc(groupData.id)
           .set(groupData.toMap());
+      return;
     } catch (e) {
       print(e);
     }
@@ -78,8 +79,11 @@ class FirestoreService {
 
   /// Returns a stream of all users from Firebase
   Stream<List<UserData>> usersListAsStream() {
-    // if (firebaseUser == null) return const Stream.empty();
-    return userDataCollectionRefrence.snapshots().map(
+    if (firebaseUser == null) return const Stream.empty();
+    return userDataCollectionRefrence
+        .where("uid", isNotEqualTo: firebaseUser!.uid)
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs.fold<List<UserData>>(
             [],
             (previousValue, element) {
@@ -94,9 +98,13 @@ class FirestoreService {
 
   /// Returns a stream of all Groups from Firebase
   Stream<List<GroupModel>> getGroupsListAsStream() {
-    print('dsfsfsddsf');
     try {
-      return groupDataCollectionRefrence.snapshots().map((snapshot) {
+      if (firebaseUser == null) return const Stream.empty();
+
+      return groupDataCollectionRefrence
+          .where("members", arrayContains: firebaseUser!.uid)
+          .snapshots()
+          .map((snapshot) {
         final data = snapshot.docs.map((e) {
           return GroupModel.fromMap(e.data() as Map<String, dynamic>);
         }).toList();
@@ -111,9 +119,27 @@ class FirestoreService {
 
   Future<List<UserData>> getAllUsers() {
     try {
+      if (firebaseUser == null) return Future.value([]);
+
       return userDataCollectionRefrence.get().then((value) => value.docs
           .map((e) => UserData.fromMap(e.data() as Map<String, dynamic>))
           .toList());
+    } catch (e) {
+      print(e);
+      return Future.value(<UserData>[]);
+    }
+  }
+
+  Future<List<UserData>> getAllUsersExcludingCurrentUser() {
+    try {
+      if (firebaseUser == null) return Future.value([]);
+
+      return userDataCollectionRefrence
+          .where("uid", isNotEqualTo: firebaseUser!.uid)
+          .get()
+          .then((value) => value.docs
+              .map((e) => UserData.fromMap(e.data() as Map<String, dynamic>))
+              .toList());
     } catch (e) {
       print(e);
       return Future.value(<UserData>[]);

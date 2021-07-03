@@ -5,6 +5,8 @@ import 'package:meeter/models/userModel.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/widgets/custom_button.dart';
 import 'package:meeter/widgets/custom_text_field.dart';
+import 'package:uuid/uuid.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 class PersonNameInputWidget extends StatefulWidget {
   const PersonNameInputWidget({
@@ -31,13 +33,13 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
   }
 
   getListOfUsers() async {
-    list = await FirestoreService.instance.getAllUsers();
+    list = await FirestoreService.instance.getAllUsersExcludingCurrentUser();
     setState(() {
       suggestionsList = list;
     });
   }
 
-  createGroup() {
+  createGroup() async {
     if (_firestoreService.firebaseUser == null) {
       print('user not registered');
       return;
@@ -51,9 +53,11 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
     group.members = selectedList.fold([_firestoreService.firebaseUser!.uid],
         (previousValue, element) => [...previousValue!, element.uid!]);
     group.type = selectedList.length > 2 ? 1 : 2;
+    group.id = const Uuid().v4();
     print('selected members');
     print(group.members);
-    _firestoreService.createGroupDoc(group);
+    await _firestoreService.createGroupDoc(group);
+    context.pop();
   }
 
   @override

@@ -265,7 +265,7 @@ class WebViewPageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
-      return !(authData.isUserAuthenticated)
+      return (authData.isUserAuthenticated)
           ? Row(
               children: [
                 Container(
