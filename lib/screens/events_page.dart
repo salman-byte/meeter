@@ -1,103 +1,196 @@
-import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:cr_calendar/cr_calendar.dart';
 
-/// The app which hosts the home page which contains the calendar on it.
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import '../utils/extensions.dart';
+import '../utils/constants.dart';
+
+import '../res/colors.dart';
+import '../widgets/create_event_dialog.dart';
+import '../widgets/day_events_bottom_sheet.dart';
+import '../widgets/day_item_widget.dart';
+import '../widgets/event_widget.dart';
+import '../widgets/week_days_widget.dart';
+
+/// Main calendar page.
 class EventPage extends StatefulWidget {
+  const EventPage({Key? key}) : super(key: key);
+
   @override
   _EventPageState createState() => _EventPageState();
 }
 
 class _EventPageState extends State<EventPage> {
+  final _currentDate = DateTime.now();
+
+  late CrCalendarController _calendarController;
+  late String _appbarTitle;
+  late String _monthName;
+
+  @override
+  void initState() {
+    _setTexts(_currentDate.year, _currentDate.month);
+    _createExampleEvents();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _calendarController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SfCalendar(
-      view: CalendarView.month,
-      dataSource: MeetingDataSource(_getDataSource()),
-      // by default the month appointment display mode set as Indicator, we can
-      // change the display mode as appointment using the appointment display
-      // mode property
-      monthViewSettings: const MonthViewSettings(
-          appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
-    ));
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        centerTitle: false,
+        title: Text(_appbarTitle),
+        actions: [
+          IconButton(
+            tooltip: 'Go to current date',
+            icon: const Icon(Icons.calendar_today),
+            onPressed: _showCurrentMonth,
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addEvent,
+        child: const Icon(Icons.add),
+      ),
+      body: Column(
+        children: [
+          /// Calendar control row.
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios),
+                onPressed: () {
+                  _changeCalendarPage(showNext: false);
+                },
+              ),
+              Text(
+                _monthName,
+                style: const TextStyle(
+                    fontSize: 16, color: violet, fontWeight: FontWeight.w600),
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios),
+                onPressed: () {
+                  _changeCalendarPage(showNext: true);
+                },
+              ),
+            ],
+          ),
+
+          /// Calendar view.
+          Expanded(
+            child: CrCalendar(
+              firstDayOfWeek: WeekDay.monday,
+              eventsTopPadding: 32,
+              initialDate: _currentDate,
+              maxEventLines: 3,
+              controller: _calendarController,
+              forceSixWeek: true,
+              dayItemBuilder: (builderArgument) =>
+                  DayItemWidget(properties: builderArgument),
+              weekDaysBuilder: (day) => WeekDaysWidget(day: day),
+              eventBuilder: (drawer) => EventWidget(drawer: drawer),
+              onDayClicked: _showDayEventsInModalSheet,
+              minDate: DateTime.now().subtract(const Duration(days: 1000)),
+              maxDate: DateTime.now().add(const Duration(days: 180)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  List<Meeting> _getDataSource() {
-    final List<Meeting> meetings = <Meeting>[];
-    final DateTime today = DateTime.now();
-    final DateTime startTime =
-        DateTime(today.year, today.month, today.day, 9, 0, 0);
-    final DateTime endTime = startTime.add(const Duration(hours: 2));
-    meetings.add(Meeting(
-        'Conference', startTime, endTime, const Color(0xFF0F8644), false));
-    return meetings;
-  }
-}
+  /// Control calendar with arrow buttons.
+  void _changeCalendarPage({required bool showNext}) => showNext
+      ? _calendarController.swipeToNextMonth()
+      : _calendarController.swipeToPreviousPage();
 
-/// An object to set the appointment collection data source to calendar, which
-/// used to map the custom appointment data to the calendar appointment, and
-/// allows to add, remove or reset the appointment collection.
-class MeetingDataSource extends CalendarDataSource {
-  /// Creates a meeting data source, which used to set the appointment
-  /// collection to the calendar
-  MeetingDataSource(List<Meeting> source) {
-    appointments = source;
+  void _onCalendarPageChanged(int year, int month) {
+    setState(() {
+      _setTexts(year, month);
+    });
   }
 
-  @override
-  DateTime getStartTime(int index) {
-    return _getMeetingData(index).from;
+  /// Set app bar text and month name over calendar.
+  void _setTexts(int year, int month) {
+    final date = DateTime(year, month);
+    _appbarTitle = date.format(kAppBarDateFormat);
+    _monthName = date.format(kMonthFormat);
   }
 
-  @override
-  DateTime getEndTime(int index) {
-    return _getMeetingData(index).to;
+  /// Show current month page.
+  void _showCurrentMonth() {
+    _calendarController.goToDate(_currentDate);
   }
 
-  @override
-  String getSubject(int index) {
-    return _getMeetingData(index).eventName;
-  }
-
-  @override
-  Color getColor(int index) {
-    return _getMeetingData(index).background;
-  }
-
-  @override
-  bool isAllDay(int index) {
-    return _getMeetingData(index).isAllDay;
-  }
-
-  Meeting _getMeetingData(int index) {
-    final dynamic meeting = appointments![index];
-    late final Meeting meetingData;
-    if (meeting is Meeting) {
-      meetingData = meeting;
+  /// Show [CreateEventDialog] with settings for new event.
+  Future<void> _addEvent() async {
+    final event = await showDialog(
+        context: context, builder: (context) => const CreateEventDialog());
+    if (event != null) {
+      _calendarController.addEvent(event);
     }
-
-    return meetingData;
   }
-}
 
-/// Custom business object class which contains properties to hold the detailed
-/// information about the event data which will be rendered in calendar.
-class Meeting {
-  /// Creates a meeting class with required details.
-  Meeting(this.eventName, this.from, this.to, this.background, this.isAllDay);
+  void _createExampleEvents() {
+    final now = _currentDate;
+    _calendarController = CrCalendarController(
+      onSwipe: _onCalendarPageChanged,
+      events: [
+        CalendarEventModel(
+          name: '1 event',
+          begin: DateTime(now.year, now.month, (now.day).clamp(1, 28)),
+          end: DateTime(now.year, now.month, (now.day).clamp(1, 28)),
+          eventColor: eventColors[0],
+        ),
+        CalendarEventModel(
+          name: '2 event',
+          begin: DateTime(now.year, now.month - 1, (now.day - 2).clamp(1, 28)),
+          end: DateTime(now.year, now.month, (now.day + 2).clamp(1, 28)),
+          eventColor: eventColors[1],
+        ),
+        CalendarEventModel(
+          name: '3 event',
+          begin: DateTime(now.year, now.month, (now.day - 3).clamp(1, 28)),
+          end: DateTime(now.year, now.month + 1, (now.day + 4).clamp(1, 28)),
+          eventColor: eventColors[2],
+        ),
+        CalendarEventModel(
+          name: '4 event',
+          begin: DateTime(now.year, now.month - 1, (now.day).clamp(1, 28)),
+          end: DateTime(now.year, now.month + 1, (now.day + 5).clamp(1, 28)),
+          eventColor: eventColors[3],
+        ),
+        CalendarEventModel(
+          name: '5 event',
+          begin: DateTime(now.year, now.month + 1, (now.day + 1).clamp(1, 28)),
+          end: DateTime(now.year, now.month + 2, (now.day + 7).clamp(1, 28)),
+          eventColor: eventColors[4],
+        ),
+      ],
+    );
+  }
 
-  /// Event name which is equivalent to subject property of [Appointment].
-  String eventName;
-
-  /// From which is equivalent to start time property of [Appointment].
-  DateTime from;
-
-  /// To which is equivalent to end time property of [Appointment].
-  DateTime to;
-
-  /// Background which is equivalent to color property of [Appointment].
-  Color background;
-
-  /// IsAllDay which is equivalent to isAllDay property of [Appointment].
-  bool isAllDay;
+  void _showDayEventsInModalSheet(
+      List<CalendarEventModel> events, DateTime day) {
+    showModalBottomSheet(
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
+        isScrollControlled: true,
+        context: context,
+        builder: (context) => DayEventsBottomSheet(
+              events: events,
+              day: day,
+              screenHeight: MediaQuery.of(context).size.height,
+            ));
+  }
 }

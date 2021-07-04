@@ -11,6 +11,7 @@ import 'package:meeter/models/userModel.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
+import 'package:meeter/screens/events_page.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:meeter/utils/create_group.dart';
@@ -84,8 +85,7 @@ class _MyAppState extends State<MyApp> {
     routes: {
       // '/': (uri, params) =>
       //     MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
-      '/': (uri, params) =>
-          MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+      '/': (uri, params) => MaterialPage(child: EventPage()),
       '/meet': (uri, params) {
         print('in the /meet block');
         return MaterialPage(
