@@ -82,6 +82,8 @@ class _MyAppState extends State<MyApp> {
       ),
     ),
     routes: {
+      // '/': (uri, params) =>
+      //     MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
       '/meet': (uri, params) {
@@ -274,10 +276,41 @@ class WebViewPageBody extends StatelessWidget {
                 VerticalDivider(),
                 Expanded(
                   child: Consumer<AppStateNotifier>(
-                      builder: (context, appstate, child) =>
-                          appstate.getCurrentSelectedChat != null
-                              ? new ChatPage()
-                              : Container()),
+                      builder: (context, appstate, child) => appstate
+                                  .getCurrentSelectedChat !=
+                              null
+                          ? Column(mainAxisSize: MainAxisSize.max, children: [
+                              Container(
+                                  child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                        appstate.getCurrentSelectedChat!.name!),
+                                  ),
+                                  PopupMenuButton(onSelected: (value) {
+                                    buildShowAnimatedMeetingDialog(context);
+                                    print('pushing route');
+                                    // VxNavigator.of(context).push(Uri.parse('/meet'));
+                                  }, itemBuilder: (context) {
+                                    return <PopupMenuItem>[
+                                      PopupMenuItem(
+                                          value: 1,
+                                          child: Text('Start meeting')),
+                                      PopupMenuItem(
+                                          value: 2,
+                                          child: Text('Schedule meeting')),
+                                    ];
+                                  })
+                                ],
+                              )),
+                              Divider(),
+                              ChatPage(),
+                            ])
+                          : Container()),
                 ),
               ],
             )
@@ -285,6 +318,19 @@ class WebViewPageBody extends StatelessWidget {
               inDialogMode: false,
             );
     });
+  }
+
+  Future buildShowAnimatedMeetingDialog(BuildContext context) {
+    return showAnimatedDialog(
+      duration: Duration(seconds: 1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(child: MeetSettings());
+      },
+      animationType: DialogTransitionType.slideFromBottom,
+      curve: Curves.fastLinearToSlowEaseIn,
+    );
   }
 }
 

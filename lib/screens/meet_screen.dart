@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:jitsi_meet/feature_flag/feature_flag.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
+import 'package:meeter/screens/chat_page.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 class Meeting extends StatefulWidget {
@@ -34,14 +37,15 @@ class _MeetingState extends State<Meeting> {
   void initState() {
     super.initState();
 
-    JitsiMeet.addListener(JitsiMeetingListener(
-        onConferenceWillJoin: _onConferenceWillJoin,
-        onConferenceJoined: _onConferenceJoined,
-        onConferenceTerminated: _onConferenceTerminated,
-        onError: _onError));
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(Duration(seconds: 5), () {
+      JitsiMeet.addListener(JitsiMeetingListener(
+          onConferenceWillJoin: _onConferenceWillJoin,
+          onConferenceJoined: _onConferenceJoined,
+          onConferenceTerminated: _onConferenceTerminated,
+          onError: _onError));
       _joinMeeting();
     });
+    // toggleChatBox();
   }
 
   @override
@@ -56,32 +60,30 @@ class _MeetingState extends State<Meeting> {
     return MaterialApp(
       home: Scaffold(
         body: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-            ),
             child: VxDevice(
-              mobile: Expanded(
-                  child: JitsiMeetConferencing(
+          mobile: Expanded(
+              child: JitsiMeetConferencing(
+            extraJS: [
+              // extraJs setup example
+              '<script>function echo(){console.log("echo!!!")};</script>',
+              '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
+            ],
+          )),
+          web: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+            ChatScreenSideMenu(),
+            Expanded(
+              child: JitsiMeetConferencing(
                 extraJS: [
+                  // '<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>'
+                  //     '<script src="https://meet.jit.si/libs/lib-jitsi-meet.min.js"></script>'
                   // extraJs setup example
                   '<script>function echo(){console.log("echo!!!")};</script>',
                   '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
                 ],
-              )),
-              web: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                      child: JitsiMeetConferencing(
-                    extraJS: [
-                      // extraJs setup example
-                      '<script>function echo(){console.log("echo!!!")};</script>',
-                      '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
-                    ],
-                  ))
-                ],
               ),
-            )),
+            ),
+          ]),
+        )),
       ),
     );
   }
@@ -93,6 +95,15 @@ class _MeetingState extends State<Meeting> {
     // If feature flag are not provided, default values will be used
     // Full list of feature flags (and defaults) available in the README
     Map<FeatureFlagEnum, bool> featureFlags = {
+      // FeatureFlag featureFlag = FeatureFlag();
+      // featureFlag.welcomePageEnabled = false;
+      // featureFlag.calendarEnabled = false;
+      // featureFlag.chatEnabled = false;
+      // featureFlag.inviteEnabled = false;
+      // featureFlag.addPeopleEnabled = false;
+
+      FeatureFlagEnum.INVITE_ENABLED: false,
+      FeatureFlagEnum.RECORDING_ENABLED: false,
       FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
       FeatureFlagEnum.CHAT_ENABLED: false,
       FeatureFlagEnum.ADD_PEOPLE_ENABLED: false,
@@ -103,9 +114,11 @@ class _MeetingState extends State<Meeting> {
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
         featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        // featureFlag.callIntegrationEnabled = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
         featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
+        // featureFlag.pipEnabled = false;
       }
     }
     // Define meetings options here
@@ -118,6 +131,7 @@ class _MeetingState extends State<Meeting> {
       ..audioOnly = widget.isAudioOnly
       ..audioMuted = widget.isAudioMuted
       ..videoMuted = widget.isVideoMuted
+      // ..featureFlags = featureFlag.to
       ..featureFlags.addAll(featureFlags)
       ..webOptions = {
         "roomName": roomText.text,
@@ -146,6 +160,7 @@ class _MeetingState extends State<Meeting> {
                 eventName: 'readyToClose',
                 callback: (dynamic message) {
                   debugPrint("readyToClose callback");
+                  VxNavigator.of(context).pop();
                 }),
           ]),
     );
@@ -161,10 +176,165 @@ class _MeetingState extends State<Meeting> {
 
   void _onConferenceTerminated(message) {
     debugPrint("_onConferenceTerminated broadcasted with message: $message");
-    VxNavigator.of(context).pop();
   }
 
   _onError(error) {
     debugPrint("_onError broadcasted: $error");
+  }
+}
+
+class ChatScreenSideMenu extends StatefulWidget {
+  const ChatScreenSideMenu({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _ChatScreenSideMenuState createState() => _ChatScreenSideMenuState();
+}
+
+class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
+  late double chatWidth = 25;
+  late double chatheight = 25;
+  Color _color = Colors.amber;
+  bool showDrawer = false;
+  bool showChatBox = false;
+  bool showNotesBox = false;
+  TextEditingController noteController = TextEditingController();
+
+  @override
+  void dispose() {
+    noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        child: Row(
+          children: [
+            Column(
+              children: [
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 500),
+                  // height: context.safePercentHeight * 100,
+                  color: Colors.blue,
+                  child: RotatedBox(
+                    quarterTurns: showDrawer ? 1 : 3,
+                    child: IconButton(
+                      icon: Icon(Icons.expand_more),
+                      onPressed: () {
+                        setState(() {
+                          showDrawer = !showDrawer;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 500),
+                    child: !showDrawer
+                        ? IconButton(
+                            icon: !showNotesBox
+                                ? Icon(Icons.notes)
+                                : Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                showNotesBox = !showNotesBox;
+                              });
+                            },
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Text('Notes'),
+                              IconButton(
+                                icon: showNotesBox
+                                    ? Icon(Icons.expand_less)
+                                    : Icon(Icons.expand_more),
+                                onPressed: () {
+                                  setState(() {
+                                    showNotesBox = !showNotesBox;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 500),
+                    child: !showDrawer
+                        ? IconButton(
+                            icon: !showChatBox
+                                ? Icon(Icons.chat_bubble)
+                                : Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                showChatBox = !showChatBox;
+                              });
+                            },
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Text('Chats'),
+                              IconButton(
+                                icon: showChatBox
+                                    ? Icon(Icons.expand_less)
+                                    : Icon(Icons.expand_more),
+                                onPressed: () {
+                                  setState(() {
+                                    showChatBox = !showChatBox;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            AnimatedContainer(
+              duration: Duration(milliseconds: 500),
+              color: _color,
+              width: showNotesBox ? context.safePercentWidth * 25 : 0,
+              child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 500),
+                  child: !showNotesBox
+                      ? Container()
+                      : Container(
+                          height: context.safePercentHeight * 100,
+                          child: Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextField(
+                                keyboardType: TextInputType.multiline,
+                                maxLines: null,
+                                controller: noteController,
+                                decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Write your thought...'),
+                              ),
+                            ),
+                          ),
+                        )),
+            ),
+            AnimatedContainer(
+                duration: Duration(milliseconds: 500),
+                width: showChatBox ? context.safePercentWidth * 50 : 0,
+                height: showChatBox ? context.safePercentHeight * 100 : 0,
+                color: _color,
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 700),
+                  child:
+                      !showChatBox ? Container() : Expanded(child: ChatPage()),
+                )),
+          ],
+        ));
   }
 }

@@ -228,31 +228,7 @@ class _ChatPageState extends State<ChatPage> {
         appStateNotifier = appstate;
         initializeChats();
       }
-      return Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Container(
-              child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Text(appstate.getCurrentSelectedChat!.name!),
-              ),
-              PopupMenuButton(onSelected: (value) {
-                buildShowAnimatedMeetingDialog(context);
-                print('pushing route');
-                // VxNavigator.of(context).push(Uri.parse('/meet'));
-              }, itemBuilder: (context) {
-                return <PopupMenuItem>[
-                  PopupMenuItem(value: 1, child: Text('Start meeting')),
-                  PopupMenuItem(value: 2, child: Text('Schedule meeting')),
-                ];
-              })
-            ],
-          )),
-          Divider(),
+      return
           // (appstate.getCurrentSelectedChat!.id != widget.groupId ||
           //         _messages.length == 0)
           //     ?
@@ -262,36 +238,21 @@ class _ChatPageState extends State<ChatPage> {
           //     LinearProgressIndicator()
           //     : Container(),
           Expanded(
-            child: new Chat(
-              theme: DefaultChatTheme(
-                  // inputBorderRadius: BorderRadius.circular(30),
-                  // inputBackgroundColor:
-                  //     _themeProvider!.themeMode().inputBackgroundColor!,
-                  backgroundColor: currentTheme.backgroundColor),
-              messages: _messages,
-              onAttachmentPressed: _handleAtachmentPressed,
-              onMessageTap: _handleMessageTap,
-              onPreviewDataFetched: _handlePreviewDataFetched,
-              onSendPressed: _handleSendPressed,
-              user: _user,
-            ),
-          ),
-        ],
+        child: new Chat(
+          theme: DefaultChatTheme(
+              // inputBorderRadius: BorderRadius.circular(30),
+              // inputBackgroundColor:
+              //     _themeProvider!.themeMode().inputBackgroundColor!,
+              backgroundColor: currentTheme.backgroundColor),
+          messages: _messages,
+          onAttachmentPressed: _handleAtachmentPressed,
+          onMessageTap: _handleMessageTap,
+          onPreviewDataFetched: _handlePreviewDataFetched,
+          onSendPressed: _handleSendPressed,
+          user: _user,
+        ),
       );
     });
-  }
-
-  Future buildShowAnimatedMeetingDialog(BuildContext context) {
-    return showAnimatedDialog(
-      duration: Duration(seconds: 1),
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(child: MeetSettings());
-      },
-      animationType: DialogTransitionType.slideFromBottom,
-      curve: Curves.fastLinearToSlowEaseIn,
-    );
   }
 }
 

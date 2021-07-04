@@ -41,6 +41,7 @@ dependencies:
   open_file: ^3.2.1
   file_picker: ^3.0.3
   uuid: ^3.0.4
+  syncfusion_flutter_calendar: ^19.2.44
   shared_preferences: ^2.0.6
   flutter_chat_ui: ^1.1.5
   # flutter_firebase_chat_core: ^1.1.0
