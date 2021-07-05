@@ -257,18 +257,20 @@ class _ChatPageState extends State<ChatPage> {
 }
 
 class MeetSettings extends StatefulWidget {
-  const MeetSettings({Key? key}) : super(key: key);
+  final String groupId;
+  const MeetSettings({Key? key, required this.groupId}) : super(key: key);
 
   @override
   _MeetSettingsState createState() => _MeetSettingsState();
 }
 
 class _MeetSettingsState extends State<MeetSettings> {
-  final subjectText = TextEditingController(text: "Subject");
+  final subjectText = TextEditingController();
 
   bool? isAudioOnly = true;
   bool? isAudioMuted = true;
   bool? isVideoMuted = true;
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -279,6 +281,9 @@ class _MeetSettingsState extends State<MeetSettings> {
           ),
           TextField(
             controller: subjectText,
+            onChanged: (value) {
+              setState(() {});
+            },
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: "Subject",
@@ -314,19 +319,23 @@ class _MeetSettingsState extends State<MeetSettings> {
           ),
           SizedBox(
             height: 64.0,
-            width: double.maxFinite,
+            // width: double.maxFinite,
             child: CustomButton(
-              onPressed: () {
-                VxNavigator.of(context).pop();
-                Future.delayed(Duration(seconds: 1), () {
-                  VxNavigator.of(context).push(Uri.parse('/meet'), params: {
-                    'am': isAudioMuted,
-                    'ao': isAudioOnly,
-                    'vm': isVideoMuted,
-                    'sub': subjectText.text
-                  });
-                });
-              },
+              onPressed: subjectText.text == ''
+                  ? null
+                  : () {
+                      context.pop();
+                      Future.delayed(Duration(seconds: 1), () {
+                        VxNavigator.of(context)
+                            .push(Uri.parse('/meet'), params: {
+                          'id': widget.groupId,
+                          'am': isAudioMuted,
+                          'ao': isAudioOnly,
+                          'vm': isVideoMuted,
+                          'sub': subjectText.text
+                        });
+                      });
+                    },
               text: "Join Meeting",
             ),
           ),

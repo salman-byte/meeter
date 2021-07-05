@@ -2,23 +2,32 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:jitsi_meet/feature_flag/feature_flag.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
 import 'package:meeter/screens/chat_page.dart';
+import 'package:meeter/services/firestoreService.dart';
+import 'package:meeter/utils/authStatusNotifier.dart';
+import 'package:meeter/widgets/custom_button.dart';
+import 'package:provider/provider.dart';
 import 'package:velocity_x/velocity_x.dart';
+
+import 'authUI.dart';
 
 class Meeting extends StatefulWidget {
   final String subject;
   final bool isAudioOnly;
   final bool isAudioMuted;
   final bool isVideoMuted;
+  final String id;
 
   const Meeting(
       {Key? key,
       required this.subject,
-      required this.isAudioOnly,
-      required this.isAudioMuted,
-      required this.isVideoMuted})
+      this.isAudioOnly = true,
+      this.isAudioMuted = true,
+      this.isVideoMuted = true,
+      required this.id})
       : super(key: key);
   @override
   _MeetingState createState() => _MeetingState();
@@ -70,7 +79,7 @@ class _MeetingState extends State<Meeting> {
             ],
           )),
           web: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            ChatScreenSideMenu(),
+            ChatScreenSideMenu(groupId: widget.id),
             Expanded(
               child: JitsiMeetConferencing(
                 extraJS: [
@@ -91,17 +100,7 @@ class _MeetingState extends State<Meeting> {
   _joinMeeting() async {
     String? serverUrl = serverText.text.trim().isEmpty ? null : serverText.text;
 
-    // Enable or disable any feature flag here
-    // If feature flag are not provided, default values will be used
-    // Full list of feature flags (and defaults) available in the README
     Map<FeatureFlagEnum, bool> featureFlags = {
-      // FeatureFlag featureFlag = FeatureFlag();
-      // featureFlag.welcomePageEnabled = false;
-      // featureFlag.calendarEnabled = false;
-      // featureFlag.chatEnabled = false;
-      // featureFlag.inviteEnabled = false;
-      // featureFlag.addPeopleEnabled = false;
-
       FeatureFlagEnum.INVITE_ENABLED: false,
       FeatureFlagEnum.RECORDING_ENABLED: false,
       FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
@@ -184,8 +183,10 @@ class _MeetingState extends State<Meeting> {
 }
 
 class ChatScreenSideMenu extends StatefulWidget {
+  final String groupId;
   const ChatScreenSideMenu({
     Key? key,
+    required this.groupId,
   }) : super(key: key);
 
   @override
@@ -200,6 +201,19 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
   bool showChatBox = false;
   bool showNotesBox = false;
   TextEditingController noteController = TextEditingController();
+  String? noteText;
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  updateNote() {
+    FirestoreService.instance.getNoteDoc(widget.groupId).then((value) {
+      setState(() {
+        noteText = value;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -307,22 +321,54 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                   duration: Duration(milliseconds: 500),
                   child: !showNotesBox
                       ? Container()
-                      : Container(
-                          height: context.safePercentHeight * 100,
-                          child: Expanded(
+                      : Column(mainAxisSize: MainAxisSize.max, children: [
+                          Expanded(
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: TextField(
-                                keyboardType: TextInputType.multiline,
-                                maxLines: null,
-                                controller: noteController,
-                                decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: 'Write your thought...'),
+                              child: Column(
+                                children: [
+                                  noteText != null
+                                      ? Text(noteText!)
+                                      : Container(),
+                                  TextField(
+                                    keyboardType: TextInputType.multiline,
+                                    maxLines: null,
+                                    controller: noteController,
+                                    onChanged: (value) {
+                                      setState(() {});
+                                    },
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: 'Write your thoughts...'),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        )),
+                          noteController.text != ''
+                              ? Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: CustomButton(
+                                    text: 'save note',
+                                    onPressed: () {
+                                      if (FirestoreService
+                                              .instance.firebaseUser ==
+                                          null) {
+                                        buildShowAnimatedSignUpDialog(context);
+                                      } else {
+                                        FirestoreService.instance
+                                            .createNoteDoc(
+                                                noteText ??
+                                                    '' + noteController.text,
+                                                widget.groupId)
+                                            .then((value) =>
+                                                noteController.text = '');
+                                      }
+                                    },
+                                  ),
+                                )
+                              : Container(),
+                        ])),
             ),
             AnimatedContainer(
                 duration: Duration(milliseconds: 500),
@@ -336,5 +382,21 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                 )),
           ],
         ));
+  }
+
+  Future buildShowAnimatedSignUpDialog(BuildContext context) {
+    return showAnimatedDialog(
+      duration: Duration(seconds: 1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+            child: SignInSignUpFlow(
+          inDialogMode: true,
+        ));
+      },
+      animationType: DialogTransitionType.slideFromBottom,
+      curve: Curves.fastLinearToSlowEaseIn,
+    );
   }
 }

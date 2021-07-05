@@ -2,6 +2,8 @@ import 'package:cr_calendar/cr_calendar.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meeter/models/eventModel.dart';
+import 'package:meeter/services/firestoreService.dart';
 import '../utils/extensions.dart';
 import '../utils/constants.dart';
 
@@ -26,13 +28,32 @@ class _EventPageState extends State<EventPage> {
   late CrCalendarController _calendarController;
   late String _appbarTitle;
   late String _monthName;
+  List<EventModel> eventList = [];
 
   @override
   void initState() {
     _setTexts(_currentDate.year, _currentDate.month);
-    _createExampleEvents();
+    // _createEvents();
+    _calendarController = CrCalendarController(
+      onSwipe: _onCalendarPageChanged,
+      // events: calendreEvents,
+    );
+    FirestoreService.instance.getEventDoc().then((data) {
+      eventList = data;
 
+      _createEvents();
+    });
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant EventPage oldWidget) {
+    FirestoreService.instance.getEventDoc().then((data) {
+      eventList = data;
+
+      _createEvents();
+    });
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -45,66 +66,78 @@ class _EventPageState extends State<EventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        centerTitle: false,
-        title: Text(_appbarTitle),
-        actions: [
-          IconButton(
-            tooltip: 'Go to current date',
-            icon: const Icon(Icons.calendar_today),
-            onPressed: _showCurrentMonth,
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   centerTitle: false,
+      //   title: Text(_appbarTitle),
+      //   actions: [
+      //     IconButton(
+      //       tooltip: 'Go to current date',
+      //       icon: const Icon(Icons.calendar_today),
+      //       onPressed: _showCurrentMonth,
+      //     ),
+      //   ],
+      // ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addEvent,
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          /// Calendar control row.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios),
-                onPressed: () {
-                  _changeCalendarPage(showNext: false);
-                },
-              ),
-              Text(
-                _monthName,
-                style: const TextStyle(
-                    fontSize: 16, color: violet, fontWeight: FontWeight.w600),
-              ),
-              IconButton(
-                icon: const Icon(Icons.arrow_forward_ios),
-                onPressed: () {
-                  _changeCalendarPage(showNext: true);
-                },
-              ),
-            ],
-          ),
-
-          /// Calendar view.
-          Expanded(
-            child: CrCalendar(
-              firstDayOfWeek: WeekDay.monday,
-              eventsTopPadding: 32,
-              initialDate: _currentDate,
-              maxEventLines: 3,
-              controller: _calendarController,
-              forceSixWeek: true,
-              dayItemBuilder: (builderArgument) =>
-                  DayItemWidget(properties: builderArgument),
-              weekDaysBuilder: (day) => WeekDaysWidget(day: day),
-              eventBuilder: (drawer) => EventWidget(drawer: drawer),
-              onDayClicked: _showDayEventsInModalSheet,
-              minDate: DateTime.now().subtract(const Duration(days: 1000)),
-              maxDate: DateTime.now().add(const Duration(days: 180)),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            /// Calendar control row.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios),
+                  onPressed: () {
+                    _changeCalendarPage(showNext: false);
+                  },
+                ),
+                Text(
+                  _monthName,
+                  style: const TextStyle(
+                      fontSize: 16, color: violet, fontWeight: FontWeight.w600),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios),
+                  onPressed: () {
+                    _changeCalendarPage(showNext: true);
+                  },
+                ),
+              ],
             ),
-          ),
-        ],
+
+            /// Calendar view.
+            Expanded(
+              child: CrCalendar(
+                firstDayOfWeek: WeekDay.monday,
+                eventsTopPadding: 32,
+                initialDate: _currentDate,
+                maxEventLines: 3,
+                controller: _calendarController,
+                forceSixWeek: true,
+                dayItemBuilder: (builderArgument) =>
+                    DayItemWidget(properties: builderArgument),
+                weekDaysBuilder: (day) => WeekDaysWidget(day: day),
+                eventBuilder: (drawer) => EventWidget(drawer: drawer),
+                onDayClicked: (List<CalendarEventModel> events, DateTime day) {
+                  List<EventModel> eventList = [];
+                  events.forEach((element) {
+                    eventList.add(eventList.singleWhere((listElement) =>
+                        listElement.eventSubject == element.name &&
+                        listElement.eventColorCode ==
+                            eventColors.indexOf(element.eventColor)));
+                  });
+                  _showDayEventsInModalSheet(eventList, day);
+                },
+                minDate: DateTime.now().subtract(const Duration(days: 1000)),
+                maxDate: DateTime.now().add(const Duration(days: 180)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -141,47 +174,31 @@ class _EventPageState extends State<EventPage> {
     }
   }
 
-  void _createExampleEvents() {
+  Future<void> _createEvents() async {
+    eventList = await FirestoreService.instance.getEventDoc();
     final now = _currentDate;
+
+    List<CalendarEventModel> calendreEvents = [];
+
+    calendreEvents = eventList.fold(
+        calendreEvents,
+        (previousValue, element) => [
+              ...previousValue,
+              CalendarEventModel(
+                  begin:
+                      DateTime.fromMillisecondsSinceEpoch(element.eventBegin!),
+                  end: DateTime.fromMillisecondsSinceEpoch(element.eventEnd!),
+                  name: element.eventSubject!,
+                  eventColor: eventColors[element.eventColorCode!])
+            ]);
     _calendarController = CrCalendarController(
       onSwipe: _onCalendarPageChanged,
-      events: [
-        CalendarEventModel(
-          name: '1 event',
-          begin: DateTime(now.year, now.month, (now.day).clamp(1, 28)),
-          end: DateTime(now.year, now.month, (now.day).clamp(1, 28)),
-          eventColor: eventColors[0],
-        ),
-        CalendarEventModel(
-          name: '2 event',
-          begin: DateTime(now.year, now.month - 1, (now.day - 2).clamp(1, 28)),
-          end: DateTime(now.year, now.month, (now.day + 2).clamp(1, 28)),
-          eventColor: eventColors[1],
-        ),
-        CalendarEventModel(
-          name: '3 event',
-          begin: DateTime(now.year, now.month, (now.day - 3).clamp(1, 28)),
-          end: DateTime(now.year, now.month + 1, (now.day + 4).clamp(1, 28)),
-          eventColor: eventColors[2],
-        ),
-        CalendarEventModel(
-          name: '4 event',
-          begin: DateTime(now.year, now.month - 1, (now.day).clamp(1, 28)),
-          end: DateTime(now.year, now.month + 1, (now.day + 5).clamp(1, 28)),
-          eventColor: eventColors[3],
-        ),
-        CalendarEventModel(
-          name: '5 event',
-          begin: DateTime(now.year, now.month + 1, (now.day + 1).clamp(1, 28)),
-          end: DateTime(now.year, now.month + 2, (now.day + 7).clamp(1, 28)),
-          eventColor: eventColors[4],
-        ),
-      ],
+      events: calendreEvents,
     );
+    setState(() {});
   }
 
-  void _showDayEventsInModalSheet(
-      List<CalendarEventModel> events, DateTime day) {
+  void _showDayEventsInModalSheet(List<EventModel> events, DateTime day) {
     showModalBottomSheet(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(8))),

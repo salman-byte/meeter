@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meeter/constants/constants.dart';
+import 'package:meeter/models/eventModel.dart';
 import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/models/userModel.dart';
@@ -45,6 +46,7 @@ class FirestoreService {
 //create Group document in database
   Future createGroupDoc(GroupModel groupData) async {
     try {
+      if (firebaseUser == null) return;
       await FirebaseFirestore.instance
           .collection("GROUPS")
           .doc(groupData.id)
@@ -58,16 +60,7 @@ class FirestoreService {
 //create Message document in database
   Future createMessageDoc(MessageModel message, String groupId) async {
     try {
-      if (message.type == Type.IMAGE) {
-        // message.uri = await FirebaseStorageService.instance
-        //     .uploadImageAndGetUrl(
-        //         imgName: message.name ?? '', file: PickedFile(message.uri!));
-      }
-      if (message.type == Type.FILE) {
-        // message.uri = await FirebaseStorageService.instance
-        //     .uploadDocumentAndGetUrl(
-        //         docName: message.name ?? '', file: PickedFile(message.uri!));
-      }
+      if (firebaseUser == null) return;
       await FirebaseFirestore.instance
           .collection(MESSAGES_COLLECTION)
           .doc(groupId)
@@ -77,6 +70,70 @@ class FirestoreService {
       return;
     } catch (e) {
       print(e);
+    }
+  }
+
+//create Notes document in database
+  Future createNoteDoc(String note, String groupId) async {
+    try {
+      if (firebaseUser == null) return;
+      await FirebaseFirestore.instance
+          .collection(NOTES_COLLECTION)
+          .doc(groupId)
+          .collection(NOTES_COLLECTION)
+          .doc(firebaseUser!.uid)
+          .set({'note': note});
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//create Event document in database
+  Future createEventDoc(EventModel event) async {
+    try {
+      if (firebaseUser == null) return;
+      await FirebaseFirestore.instance
+          .collection(EVENTS_COLLECTION)
+          .doc()
+          .set(event.toMap());
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//get Notes document from database
+  Future<String> getNoteDoc(String groupId) async {
+    try {
+      if (firebaseUser == null) return '';
+      return await FirebaseFirestore.instance
+          .collection(NOTES_COLLECTION)
+          .doc(groupId)
+          .collection(NOTES_COLLECTION)
+          .doc(firebaseUser!.uid)
+          .get()
+          .then((value) => value.data()!['note']);
+    } catch (e) {
+      print(e);
+      return '';
+    }
+  }
+
+//get Event document from database
+  Future<List<EventModel>> getEventDoc() async {
+    try {
+      if (firebaseUser == null) return [];
+      return await FirebaseFirestore.instance
+          .collection(EVENTS_COLLECTION)
+          .where("members", arrayContains: firebaseUser!.uid)
+          .get()
+          .then((snapshot) {
+        return snapshot.docs.map((e) => EventModel.fromMap(e.data())).toList();
+      });
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 

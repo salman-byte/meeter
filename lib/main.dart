@@ -1,13 +1,17 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cr_calendar/cr_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:meeter/models/eventModel.dart';
 import 'package:meeter/models/groupModel.dart';
+import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/models/userModel.dart';
+import 'package:meeter/res/colors.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
@@ -19,13 +23,16 @@ import 'package:meeter/widgets/chat_list_tile.dart';
 import 'package:meeter/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'package:velocity_x/velocity_x.dart';
-
+import 'utils/extensions.dart';
 import 'constants/constants.dart';
 import 'screens/authUI.dart';
 import 'screens/meet_screen.dart';
 import 'utils/authStatusNotifier.dart';
+import 'utils/constants.dart';
 import 'utils/theme_notifier.dart';
+import 'widgets/create_event_dialog.dart';
 import 'widgets/custom_text_field.dart';
 
 Future<void> main() async {
@@ -83,13 +90,14 @@ class _MyAppState extends State<MyApp> {
       ),
     ),
     routes: {
-      // '/': (uri, params) =>
-      //     MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
-      '/': (uri, params) => MaterialPage(child: EventPage()),
+      '/': (uri, params) =>
+          MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+      '/schedule': (uri, params) => MaterialPage(child: EventPage()),
       '/meet': (uri, params) {
         print('in the /meet block');
         return MaterialPage(
             child: Meeting(
+          id: params['id'],
           isAudioMuted: params['am'],
           isAudioOnly: params['ao'],
           isVideoMuted: params['vm'],
@@ -129,16 +137,8 @@ class _MyHomePageState extends State<MyHomePage> {
   ThemeProvider? themeProvider;
   @override
   void initState() {
-    // TODO: implement initState
     themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    // FirestoreService().getGroupData();
-    // FirestoreService().getGroupsListAsStream();
-    // FirestoreService().createGroupDoc(GroupModel(
-    //     createdAt: Timestamp.fromDate(DateTime.now()),
-    //     id: "abcdefghijklllllllllll",
-    //     modifiedAt: Timestamp.fromDate(DateTime.now()),
-    //     name: "Random topic",
-    //     createdBy: 'dasfsfdssdsdfsd'));
+
     super.initState();
   }
 
@@ -201,14 +201,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   itemBuilder: (context) {
                     return <PopupMenuItem>[
-                      PopupMenuItem(
-                        value: 0,
-                        child: Text('settings'),
-                      ),
-                      PopupMenuItem(
-                        value: 1,
-                        child: Text('invite'),
-                      ),
+                      // PopupMenuItem(
+                      //   value: 0,
+                      //   child: Text('settings'),
+                      // ),
+                      // PopupMenuItem(
+                      //   value: 1,
+                      //   child: Text('invite'),
+                      // ),
                       PopupMenuItem(
                         value: 2,
                         child: Text('logout'),
@@ -259,7 +259,7 @@ class MobileViewPageBody extends StatelessWidget {
 }
 
 class WebViewPageBody extends StatelessWidget {
-  const WebViewPageBody({
+  WebViewPageBody({
     Key? key,
   }) : super(key: key);
 
@@ -267,66 +267,264 @@ class WebViewPageBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
       return (authData.isUserAuthenticated)
-          ? Row(
-              children: [
-                Container(
-                  width: context.percentWidth * 30,
-                  child: TabBarPageView(),
-                ),
-                VerticalDivider(),
-                Expanded(
-                  child: Consumer<AppStateNotifier>(
-                      builder: (context, appstate, child) => appstate
-                                  .getCurrentSelectedChat !=
-                              null
-                          ? Column(mainAxisSize: MainAxisSize.max, children: [
-                              Container(
-                                  child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: Text(
-                                        appstate.getCurrentSelectedChat!.name!),
-                                  ),
-                                  PopupMenuButton(onSelected: (value) {
-                                    buildShowAnimatedMeetingDialog(context);
-                                    print('pushing route');
-                                    // VxNavigator.of(context).push(Uri.parse('/meet'));
-                                  }, itemBuilder: (context) {
-                                    return <PopupMenuItem>[
-                                      PopupMenuItem(
-                                          value: 1,
-                                          child: Text('Start meeting')),
-                                      PopupMenuItem(
-                                          value: 2,
-                                          child: Text('Schedule meeting')),
-                                    ];
-                                  })
-                                ],
-                              )),
-                              Divider(),
-                              ChatPage(),
-                            ])
-                          : Container()),
-                ),
-              ],
-            )
+          ? WebViewPageBodyForAuthenticatedUser()
           : SignInSignUpFlow(
               inDialogMode: false,
             );
     });
   }
+}
 
-  Future buildShowAnimatedMeetingDialog(BuildContext context) {
+enum BodyPage { CHAT, SCHEDULE }
+
+class WebViewPageBodyForAuthenticatedUser extends StatefulWidget {
+  const WebViewPageBodyForAuthenticatedUser({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _WebViewPageBodyForAuthenticatedUserState createState() =>
+      _WebViewPageBodyForAuthenticatedUserState();
+}
+
+class _WebViewPageBodyForAuthenticatedUserState
+    extends State<WebViewPageBodyForAuthenticatedUser> {
+  BodyPage page = BodyPage.CHAT;
+  ThemeProvider? themeProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Row(
+      children: [
+        AnimatedContainer(
+          duration: Duration(milliseconds: 500),
+          height: double.maxFinite,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            // mainAxisSize: MainAxisSize.max,
+            children: [
+              Container(
+                height: context.safePercentHeight * 10,
+                child: Row(
+                  children: [
+                    page == BodyPage.SCHEDULE
+                        ? Container(
+                            width: context.safePercentWidth * 0.5,
+                            color: themeProvider!.themeData().accentColor,
+                          )
+                        : Container(
+                            width: context.safePercentWidth * 0.5,
+                          ),
+                    Container(
+                      // width: double.maxFinite,
+                      child: IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: () {
+                          if (page != BodyPage.SCHEDULE) {
+                            setState(() {
+                              page = BodyPage.SCHEDULE;
+                            });
+                          }
+                        },
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                height: context.safePercentHeight * 10,
+                child: Row(children: [
+                  page == BodyPage.CHAT
+                      ? Container(
+                          width: context.safePercentWidth * 0.5,
+                          color: themeProvider!.themeData().accentColor,
+                        )
+                      : Container(
+                          width: context.safePercentWidth * 0.5,
+                        ),
+                  Container(
+                    // width: double.maxFinite,
+                    child: IconButton(
+                      icon: Icon(Icons.chat),
+                      onPressed: () {
+                        if (page != BodyPage.CHAT) {
+                          setState(() {
+                            page = BodyPage.CHAT;
+                          });
+                        }
+                      },
+                    ),
+                  )
+                ]),
+              )
+            ],
+          ),
+        ),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: 500),
+            child: page == BodyPage.SCHEDULE
+                ? EventPage()
+                : Row(
+                    children: [
+                      Container(
+                        width: context.percentWidth * 30,
+                        child: TabBarPageView(),
+                      ),
+                      VerticalDivider(),
+                      Expanded(
+                        child: Consumer<AppStateNotifier>(
+                            builder: (context, appstate, child) =>
+                                appstate.getCurrentSelectedChat != null
+                                    ? ChatViewWithHeader(
+                                        group: appstate.getCurrentSelectedChat!)
+                                    : Container()),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ChatViewWithHeader extends StatefulWidget {
+  final GroupModel group;
+  const ChatViewWithHeader({
+    Key? key,
+    required this.group,
+  }) : super(key: key);
+
+  @override
+  _ChatViewWithHeaderState createState() => _ChatViewWithHeaderState();
+}
+
+class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
+  String noteText = 'no data yet';
+  bool notesOpen = false;
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatViewWithHeader oldWidget) {
+    print('groupid: ${widget.group.id!}');
+    // TODO: implement didUpdateWidget
+    FirestoreService.instance.getNoteDoc(widget.group.id!).then((value) {
+      setState(() {
+        noteText = value;
+      });
+    });
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(mainAxisSize: MainAxisSize.max, children: [
+      Container(
+          child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(widget.group.name!),
+          ),
+          PopupMenuButton(onSelected: (value) async {
+            switch (value) {
+              case 1:
+                buildShowAnimatedMeetingDialog(context, widget.group.id!);
+                print('pushing route');
+                break;
+              case 2:
+                final CalendarEventModel? event = await showDialog(
+                    context: context,
+                    builder: (context) => const CreateEventDialog());
+                if (event != null) {
+                  String meetLink =
+                      'meeter-app-17608.web.app/meet?id=${widget.group.id!}&&subject=${event.name}';
+                  final MessageModel message = MessageModel(
+                      id: const Uuid().v4(),
+                      type: Type.TEXT,
+                      createdAt: DateTime.now().millisecondsSinceEpoch,
+                      text: '''A meeting is scheduled 
+from ${event.begin.format(kDateRangeFormat)} 
+to ${event.end.format(kDateRangeFormat)}
+
+on subject : ${event.name}
+
+joining link is: $meetLink ''',
+                      author: Author(
+                          id: FirestoreService.instance.firebaseUser!.uid));
+                  // _calendarController.addEvent(event);
+                  // print(event.eventColor.toString());
+                  FirestoreService.instance
+                      .createMessageDoc(message, widget.group.id!);
+                  FirestoreService.instance.createEventDoc(EventModel(
+                      eventBegin: event.begin.millisecondsSinceEpoch,
+                      eventEnd: event.end.millisecondsSinceEpoch,
+                      eventColorCode: eventColors.indexOf(event.eventColor),
+                      eventMeetLink: meetLink,
+                      eventSubject: event.name,
+                      members: widget.group.members));
+                  // print(message.text);
+                }
+                break;
+              case 3:
+                setState(() {
+                  notesOpen = !notesOpen;
+                });
+                break;
+              default:
+            }
+
+            // VxNavigator.of(context).push(Uri.parse('/meet'));
+          }, itemBuilder: (context) {
+            return <PopupMenuItem>[
+              PopupMenuItem(value: 1, child: Text('Start meeting')),
+              PopupMenuItem(value: 2, child: Text('Schedule meeting')),
+              PopupMenuItem(value: 3, child: Text('Notes')),
+            ];
+          })
+        ],
+      )),
+      Divider(),
+      AnimatedContainer(
+        duration: Duration(seconds: 1),
+        child: notesOpen
+            ? LimitedBox(
+                maxHeight: context.safePercentHeight * 30,
+                child: SingleChildScrollView(
+                  child: Container(
+                    width: double.maxFinite,
+                    color: Colors.amber,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(noteText),
+                    ),
+                  ),
+                ),
+              )
+            : Container(),
+      ),
+      ChatPage(),
+    ]);
+  }
+
+  Future buildShowAnimatedMeetingDialog(BuildContext context, String id) {
     return showAnimatedDialog(
       duration: Duration(seconds: 1),
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(child: MeetSettings());
+        return Dialog(
+            child: MeetSettings(
+          groupId: id,
+        ));
       },
       animationType: DialogTransitionType.slideFromBottom,
       curve: Curves.fastLinearToSlowEaseIn,

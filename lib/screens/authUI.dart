@@ -17,6 +17,7 @@ class SignInSignUpFlow extends StatefulWidget {
 
 class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
   ThemeProvider? _themeProvider;
+  final TextEditingController nameInputController = TextEditingController();
   final TextEditingController usernameInputController = TextEditingController();
   final TextEditingController passwordInputController = TextEditingController();
   final TextEditingController confirmPasswordInputController =
@@ -57,6 +58,7 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
     errorMsg = null;
 
     errorMsg = await EmailAuth().createUserWithEmailAndPassword(
+        name: nameInputController.text,
         email: usernameInputController.text,
         password: passwordInputController.text);
     usernameInputController.clear();
@@ -187,6 +189,7 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
                             confirmPasswordInputController,
                         usernameInputController: usernameInputController,
                         passwordInputController: passwordInputController,
+                        nameInputController: nameInputController,
                         onSignUpPressed: () {
                           _signUpUser();
                         },
@@ -236,7 +239,7 @@ class LoginForm extends StatelessWidget {
           children: <Widget>[
             CustomTextField(
               controller: usernameInputController,
-              hintText: "Enter email",
+              labelText: "Enter email",
               validator: (value) {
                 if (!value!.contains('@') || !value.endsWith('.com')) {
                   return "Email must contain '@' and end with '.com'";
@@ -248,7 +251,7 @@ class LoginForm extends StatelessWidget {
             CustomTextField(
               controller: passwordInputController,
               obscureText: true,
-              hintText: "Enter password",
+              labelText: "Enter password",
               validator: (value) {
                 if (value!.isEmpty) {
                   return 'Password is empty';
@@ -275,6 +278,7 @@ class LoginForm extends StatelessWidget {
 }
 
 class SignupForm extends StatelessWidget {
+  final TextEditingController nameInputController;
   final TextEditingController usernameInputController;
   final TextEditingController passwordInputController;
   final TextEditingController confirmPasswordInputController;
@@ -285,6 +289,7 @@ class SignupForm extends StatelessWidget {
     required this.usernameInputController,
     required this.passwordInputController,
     required this.confirmPasswordInputController,
+    required this.nameInputController,
   }) : super(key: key);
 
   final _formKey = GlobalKey<FormState>();
@@ -304,8 +309,23 @@ class SignupForm extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           children: <Widget>[
             CustomTextField(
+              controller: nameInputController,
+              obscureText: true,
+              labelText: "Full Name",
+              onChanged: (value) {
+                password = value;
+              },
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'name is empty';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 10.0),
+            CustomTextField(
               controller: usernameInputController,
-              hintText: "Enter email",
+              labelText: "Enter email",
               validator: (value) {
                 if (!value!.contains('@') || !value.endsWith('.com')) {
                   return "Email must contain '@' and end with '.com'";
@@ -317,7 +337,7 @@ class SignupForm extends StatelessWidget {
             CustomTextField(
               controller: passwordInputController,
               obscureText: true,
-              hintText: "Enter password",
+              labelText: "Enter password",
               onChanged: (value) {
                 password = value;
               },
@@ -332,7 +352,7 @@ class SignupForm extends StatelessWidget {
             CustomTextField(
               controller: confirmPasswordInputController,
               obscureText: true,
-              hintText: "Confirm password",
+              labelText: "Confirm password",
               validator: (value) {
                 return value != password ? 'Password mismatch' : null;
               },

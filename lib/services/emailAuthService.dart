@@ -7,7 +7,9 @@ class EmailAuth {
   FirebaseAuth auth = FirebaseAuth.instance;
 
   Future<String?> createUserWithEmailAndPassword(
-      {required String email, required String password}) async {
+      {required String email,
+      required String password,
+      required String name}) async {
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -17,17 +19,9 @@ class EmailAuth {
       await FirestoreService.instance.createUserDoc(UserData(
         email: email,
         uid: userCredential.user!.uid,
-        displayName: 'Nishit Dixit',
+        displayName: name,
         photoUrl: 'https://i.pravatar.cc/126',
       ));
-      // await FirebaseChatCore.instance.createUserInFirestore(
-      //   types.User(
-      //     firstName: 'Nishit',
-      //     id: userCredential.user!.uid, // UID from Firebase Authentication
-      //     imageUrl: 'https://i.pravatar.cc/300',
-      //     lastName: 'Dixit',
-      //   ),
-      // );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');

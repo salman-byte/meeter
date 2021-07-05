@@ -1,4 +1,6 @@
 import 'package:cr_calendar/cr_calendar.dart';
+import 'package:meeter/models/eventModel.dart';
+import 'package:meeter/res/colors.dart';
 import '../utils/constants.dart';
 import '../utils/extensions.dart';
 import 'package:flutter/cupertino.dart';
@@ -14,7 +16,7 @@ class DayEventsBottomSheet extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
-  final List<CalendarEventModel> events;
+  final List<EventModel> events;
   final DateTime day;
   final double screenHeight;
 
@@ -51,7 +53,8 @@ class DayEventsBottomSheet extends StatelessWidget {
                                   child: Row(
                                     children: [
                                       Container(
-                                        color: event.eventColor,
+                                        color:
+                                            eventColors[event.eventColorCode!],
                                         width: 6,
                                       ),
                                       Expanded(
@@ -67,14 +70,14 @@ class DayEventsBottomSheet extends StatelessWidget {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                event.name,
+                                                event.eventSubject!,
                                                 style: const TextStyle(
                                                     fontSize: 16),
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
-                                                '${event.begin.format(kDateRangeFormat)} - '
-                                                '${event.end.format(kDateRangeFormat)}',
+                                                '${DateTime.fromMillisecondsSinceEpoch(event.eventBegin!).format(kDateRangeFormat)} - '
+                                                '${DateTime.fromMillisecondsSinceEpoch(event.eventEnd!).format(kDateRangeFormat)}',
                                                 style: const TextStyle(
                                                     fontSize: 14),
                                               )
