@@ -93,23 +93,28 @@ class _MyAppState extends State<MyApp> {
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
       '/schedule': (uri, params) => MaterialPage(child: EventPage()),
-      '/meet': (uri, params) {
-        print('in the /meet block');
-        return MaterialPage(
+      '/signup': (uri, params) => MaterialPage(
+              child: SignInSignUpFlow(
+            inDialogMode: true,
+          )),
+      '/meet': (uri, params) => MaterialPage(
             child: Meeting(
-          id: params['id'],
-          isAudioMuted: params['am'],
-          isAudioOnly: params['ao'],
-          isVideoMuted: params['vm'],
-          subject: params['sub'],
-        ));
-      }
+              id: uri.queryParameters['id'] ?? params['id'],
+              isAudioMuted: uri.queryParameters['am'] as bool? ?? true,
+              isAudioOnly: uri.queryParameters['ao'] as bool? ?? true,
+              isVideoMuted: uri.queryParameters['vm'] as bool? ?? true,
+              subject: uri.queryParameters['sub'] ?? params['sub'],
+            ),
+          )
     },
   );
   @override
   void initState() {
     AuthStatusNotifier();
     // TODO: implement initState
+    navigator.addListener(() {
+      print(navigator.currentConfiguration!.toString());
+    });
     super.initState();
   }
 
@@ -445,33 +450,7 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
                     context: context,
                     builder: (context) => const CreateEventDialog());
                 if (event != null) {
-                  String meetLink =
-                      'meeter-app-17608.web.app/meet?id=${widget.group.id!}&&subject=${event.name}';
-                  final MessageModel message = MessageModel(
-                      id: const Uuid().v4(),
-                      type: Type.TEXT,
-                      createdAt: DateTime.now().millisecondsSinceEpoch,
-                      text: '''A meeting is scheduled 
-from ${event.begin.format(kDateRangeFormat)} 
-to ${event.end.format(kDateRangeFormat)}
-
-on subject : ${event.name}
-
-joining link is: $meetLink ''',
-                      author: Author(
-                          id: FirestoreService.instance.firebaseUser!.uid));
-                  // _calendarController.addEvent(event);
-                  // print(event.eventColor.toString());
-                  FirestoreService.instance
-                      .createMessageDoc(message, widget.group.id!);
-                  FirestoreService.instance.createEventDoc(EventModel(
-                      eventBegin: event.begin.millisecondsSinceEpoch,
-                      eventEnd: event.end.millisecondsSinceEpoch,
-                      eventColorCode: eventColors.indexOf(event.eventColor),
-                      eventMeetLink: meetLink,
-                      eventSubject: event.name,
-                      members: widget.group.members));
-                  // print(message.text);
+                  scheduleCalenderEventAndMeetForLater(event);
                 }
                 break;
               case 3:
@@ -529,6 +508,32 @@ joining link is: $meetLink ''',
       animationType: DialogTransitionType.slideFromBottom,
       curve: Curves.fastLinearToSlowEaseIn,
     );
+  }
+
+  void scheduleCalenderEventAndMeetForLater(CalendarEventModel event) {
+    String meetLink =
+        'meeter-app-17608.web.app/meet?id=${widget.group.id!}&sub=${event.name.replaceAll(' ', '+')}';
+
+    final MessageModel message = MessageModel(
+        id: const Uuid().v4(),
+        type: Type.TEXT,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+        text: '''A meeting is scheduled 
+from ${event.begin.format(kDateRangeFormat)} 
+to ${event.end.format(kDateRangeFormat)}
+                  
+on subject : ${event.name}
+
+joining link is: $meetLink ''',
+        author: Author(id: FirestoreService.instance.firebaseUser!.uid));
+    FirestoreService.instance.createMessageDoc(message, widget.group.id!);
+    FirestoreService.instance.createEventDoc(EventModel(
+        eventBegin: event.begin.millisecondsSinceEpoch,
+        eventEnd: event.end.millisecondsSinceEpoch,
+        eventColorCode: eventColors.indexOf(event.eventColor),
+        eventMeetLink: meetLink,
+        eventSubject: event.name,
+        members: widget.group.members));
   }
 }
 

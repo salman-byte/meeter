@@ -137,6 +137,23 @@ class FirestoreService {
     }
   }
 
+//get group document from database
+  Future<GroupModel?> getGroupDoc(String groupId) async {
+    try {
+      if (firebaseUser == null) return null;
+      return await FirebaseFirestore.instance
+          .collection(GROUPS_COLLECTION)
+          .doc(groupId)
+          .get()
+          .then((document) {
+        return GroupModel.fromMap(document.data()!);
+      });
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
 //get Messages as stream from database
   Stream<List<MessageModel>> getMessagesAsStreamFromDataBase(String groupId) {
     try {

@@ -7,6 +7,7 @@ import 'package:jitsi_meet/feature_flag/feature_flag.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
 import 'package:meeter/screens/chat_page.dart';
 import 'package:meeter/services/firestoreService.dart';
+import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:meeter/utils/authStatusNotifier.dart';
 import 'package:meeter/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +37,7 @@ class Meeting extends StatefulWidget {
 class _MeetingState extends State<Meeting> {
   final serverText = TextEditingController();
   final roomText = TextEditingController(text: "plugintestroom");
-  final nameText = TextEditingController(text: "Plugin Test User");
+  final nameText = TextEditingController();
   final emailText = TextEditingController(text: "fake@email.com");
   final iosAppBarRGBAColor =
       TextEditingController(text: "#0080FF80"); //transparent blue
@@ -45,7 +46,10 @@ class _MeetingState extends State<Meeting> {
   @override
   void initState() {
     super.initState();
-
+    print('**********************id: ' + widget.id);
+    print('**********************subject: ' + widget.subject);
+    Provider.of<AppStateNotifier>(context, listen: false)
+        .setCurrentSelectedChatViaGroupId = widget.id;
     Future.delayed(Duration(seconds: 5), () {
       JitsiMeet.addListener(JitsiMeetingListener(
           onConferenceWillJoin: _onConferenceWillJoin,
@@ -55,6 +59,17 @@ class _MeetingState extends State<Meeting> {
       _joinMeeting();
     });
     // toggleChatBox();
+  }
+
+  @override
+  void didChangeDependencies() {
+    String? name = Provider.of<AuthStatusNotifier>(context, listen: false)
+        .currentUser
+        ?.displayName;
+    nameText.text = name ?? 'anonymous';
+    Provider.of<AppStateNotifier>(context, listen: false)
+        .setCurrentSelectedChatViaGroupId = widget.id;
+    super.didChangeDependencies();
   }
 
   @override
@@ -121,7 +136,7 @@ class _MeetingState extends State<Meeting> {
       }
     }
     // Define meetings options here
-    var options = JitsiMeetingOptions(room: roomText.text)
+    var options = JitsiMeetingOptions(room: widget.subject.replaceAll(' ', ''))
       ..serverURL = serverUrl
       ..subject = widget.subject
       ..userDisplayName = nameText.text
@@ -133,7 +148,7 @@ class _MeetingState extends State<Meeting> {
       // ..featureFlags = featureFlag.to
       ..featureFlags.addAll(featureFlags)
       ..webOptions = {
-        "roomName": roomText.text,
+        "roomName": widget.subject.replaceAll(' ', ''),
         "width": "100%",
         "height": "100%",
         "enableWelcomePage": false,
@@ -374,29 +389,54 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                 duration: Duration(milliseconds: 500),
                 width: showChatBox ? context.safePercentWidth * 50 : 0,
                 height: showChatBox ? context.safePercentHeight * 100 : 0,
-                color: _color,
-                child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 700),
-                  child:
-                      !showChatBox ? Container() : Expanded(child: ChatPage()),
+                child: Consumer<AppStateNotifier>(
+                  builder: (context, appstate, child) => AnimatedSwitcher(
+                    duration: Duration(milliseconds: 700),
+                    child: !showChatBox
+                        ? Container()
+                        : appstate.getCurrentSelectedChat == null
+                            ? Scaffold(
+                                body: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                        'You\'re currently signed out, you need to sign in first to access chats...'),
+                                    SizedBox(
+                                      height: context.safePercentHeight * 10,
+                                    ),
+                                    CustomButton(
+                                      text: 'sign in',
+                                      onPressed: () {
+                                        buildShowAnimatedSignUpDialog(context);
+                                      },
+                                    )
+                                  ],
+                                ),
+                              ))
+                            : Expanded(child: ChatPage()),
+                  ),
                 )),
           ],
         ));
   }
 
-  Future buildShowAnimatedSignUpDialog(BuildContext context) {
-    return showAnimatedDialog(
-      duration: Duration(seconds: 1),
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-            child: SignInSignUpFlow(
-          inDialogMode: true,
-        ));
-      },
-      animationType: DialogTransitionType.slideFromBottom,
-      curve: Curves.fastLinearToSlowEaseIn,
-    );
+  buildShowAnimatedSignUpDialog(BuildContext context) {
+    return VxNavigator.of(context).push(Uri.parse('/signup'));
+    // return showAnimatedDialog(
+    //   duration: Duration(seconds: 1),
+    //   context: context,
+    //   barrierDismissible: true,
+    //   builder: (BuildContext context) {
+    //     return Scaffold(
+    //         body: SignInSignUpFlow(
+    //       inDialogMode: true,
+    //     ));
+    //   },
+    //   animationType: DialogTransitionType.slideFromBottom,
+    //   curve: Curves.fastLinearToSlowEaseIn,
+    // );
   }
 }
