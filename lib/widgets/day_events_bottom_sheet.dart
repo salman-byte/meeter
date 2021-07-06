@@ -1,6 +1,8 @@
 import 'package:cr_calendar/cr_calendar.dart';
 import 'package:meeter/models/eventModel.dart';
 import 'package:meeter/res/colors.dart';
+import 'package:meeter/widgets/custom_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../utils/constants.dart';
 import '../utils/extensions.dart';
 import 'package:flutter/cupertino.dart';
@@ -69,10 +71,29 @@ class DayEventsBottomSheet extends StatelessWidget {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                event.eventSubject!,
-                                                style: const TextStyle(
-                                                    fontSize: 16),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    event.eventSubject!,
+                                                    style: const TextStyle(
+                                                        fontSize: 16),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 8.0),
+                                                    child: CustomButton(
+                                                        text:
+                                                            'join this meeting',
+                                                        autoSize: true,
+                                                        onPressed: () => launch(
+                                                            '${event.eventMeetLink}')),
+                                                  ),
+                                                ],
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
@@ -80,7 +101,8 @@ class DayEventsBottomSheet extends StatelessWidget {
                                                 '${DateTime.fromMillisecondsSinceEpoch(event.eventEnd!).format(kDateRangeFormat)}',
                                                 style: const TextStyle(
                                                     fontSize: 14),
-                                              )
+                                              ),
+                                              const SizedBox(height: 8),
                                             ],
                                           ),
                                         ),
