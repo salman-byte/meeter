@@ -56,8 +56,8 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
     group.id = const Uuid().v4();
     print('selected members');
     print(group.members);
-    await _firestoreService.createGroupDoc(group);
-    context.pop();
+    // await _firestoreService.createGroupDoc(group);
+    context.pop(group);
   }
 
   @override
@@ -83,7 +83,7 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
               selectedList.isEmpty
                   ? Container()
                   : CustomButton(
-                      text: 'create',
+                      text: 'done',
                       autoSize: true,
                       onPressed: () {
                         createGroup();

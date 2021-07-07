@@ -41,7 +41,7 @@ class ThemeProvider with ChangeNotifier {
   ThemeData themeData() {
     return ThemeData(
       visualDensity: VisualDensity.adaptivePlatformDensity,
-      primarySwatch: isLightTheme ? Colors.blue : Colors.orange,
+      primarySwatch: isLightTheme ? Colors.blue : Colors.lightGreen,
       primaryColor: isLightTheme ? Colors.white : Color(0xFF1E1F28),
       brightness: isLightTheme ? Brightness.light : Brightness.dark,
       backgroundColor: isLightTheme ? Color(0xFFFFFFFF) : Color(0xFF26242e),
@@ -53,6 +53,7 @@ class ThemeProvider with ChangeNotifier {
   // Theme mode to display unique properties not cover in theme data
   ThemeColor themeMode() {
     return ThemeColor(
+      selectedTileColor: isLightTheme ? Colors.blue : Color(0xFF222029),
       inputBackgroundColor:
           isLightTheme ? Color(0xFFe7e7e8) : Color(0xFF222029),
       themeColor: Colors.purple,
@@ -60,7 +61,7 @@ class ThemeProvider with ChangeNotifier {
         if (isLightTheme) ...[Color(0xDDFF0080), Color(0xDDFF8C00)],
         if (!isLightTheme) ...[Color(0xFF8983F7), Color(0xFFA3DAFB)]
       ],
-      textColor: isLightTheme ? Color(0xFF000000) : Color(0xFFFFFFFF),
+      textColor: isLightTheme ? Colors.black : Color(0xFFFFFFFF),
       toggleButtonColor: isLightTheme ? Color(0xFFFFFFFF) : Color(0xFf34323d),
       toggleBackgroundColor:
           isLightTheme ? Color(0xFFe7e7e8) : Color(0xFF222029),
@@ -84,6 +85,7 @@ class ThemeProvider with ChangeNotifier {
 
 // A class to manage specify colors and styles in the app not supported by theme data
 class ThemeColor {
+  Color? selectedTileColor;
   List<Color>? gradient;
   Color? themeColor;
   Color? backgroundColor;
@@ -95,6 +97,7 @@ class ThemeColor {
 
   ThemeColor({
     this.themeColor,
+    this.selectedTileColor,
     this.gradient,
     this.backgroundColor,
     this.toggleBackgroundColor,

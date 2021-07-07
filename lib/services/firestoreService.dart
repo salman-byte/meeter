@@ -48,9 +48,56 @@ class FirestoreService {
     try {
       if (firebaseUser == null) return;
       await FirebaseFirestore.instance
-          .collection("GROUPS")
+          .collection(GROUPS_COLLECTION)
           .doc(groupData.id)
           .set(groupData.toMap());
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//update Group document in database for recent message
+  Future updateRecentMessageInGroupDoc(
+      {required String groupId, required MessageModel message}) async {
+    try {
+      if (firebaseUser == null) return;
+
+      await FirebaseFirestore.instance
+          .collection(GROUPS_COLLECTION)
+          .doc(groupId)
+          .update({
+        MODIFIED_AT_FIELD_IN_GROUP_DOCUMENT: Timestamp.now(),
+        RECENT_MESSAGE_FIELD_IN_GROUP_DOCUMENT: RecentMessage(
+                sentAt:
+                    Timestamp.fromMillisecondsSinceEpoch(message.createdAt!),
+                sentBy: message.author!.id,
+                readBy: [message.author!.id!],
+                messageText: message.type == Type.TEXT
+                    ? message.text
+                    : message.type.toString().split('.').last)
+            .toMap()
+      });
+
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//update Group document in database for marking message as read
+  Future markLastMessageAsReadInGroupDoc({required String groupId}) async {
+    try {
+      if (firebaseUser == null) return;
+
+      await FirebaseFirestore.instance
+          .collection(GROUPS_COLLECTION)
+          .doc(groupId)
+          .update({
+        "$RECENT_MESSAGE_FIELD_IN_GROUP_DOCUMENT.readBy":
+            FieldValue.arrayUnion([firebaseUser?.uid])
+      });
+
       return;
     } catch (e) {
       print(e);
@@ -67,6 +114,7 @@ class FirestoreService {
           .collection(MESSAGES_COLLECTION)
           .doc()
           .set(message.toMap());
+      await updateRecentMessageInGroupDoc(groupId: groupId, message: message);
       return;
     } catch (e) {
       print(e);
@@ -161,7 +209,7 @@ class FirestoreService {
           .collection(MESSAGES_COLLECTION)
           .doc(groupId)
           .collection(MESSAGES_COLLECTION)
-          .orderBy("createdAt", descending: true)
+          .orderBy("createdAt")
           .snapshots()
           .map((event) =>
               event.docs.map((e) => MessageModel.fromMap(e.data())).toList());
@@ -222,14 +270,23 @@ class FirestoreService {
       if (firebaseUser == null) return const Stream.empty();
 
       return groupDataCollectionRefrence
+          .orderBy(MODIFIED_AT_FIELD_IN_GROUP_DOCUMENT, descending: true)
           .where("members", arrayContains: firebaseUser!.uid)
           .snapshots()
           .map((snapshot) {
+        // final data = snapshot.docs.fold<List<GroupModel>>(
+        //     [],
+        //     (previousValue, element) => [
+        //           ...previousValue,
+        //           GroupModel.fromMap(element.data() as Map<String, dynamic>)
+        //         ]);
         final data = snapshot.docs.map((e) {
           return GroupModel.fromMap(e.data() as Map<String, dynamic>);
         }).toList();
         print(data.length);
         return data;
+      }).handleError((e) {
+        print(e);
       });
     } catch (e) {
       print(e);
@@ -247,6 +304,19 @@ class FirestoreService {
     } catch (e) {
       print(e);
       return Future.value(<UserData>[]);
+    }
+  }
+
+  Future<List<GroupModel>> getAllGroups() {
+    try {
+      if (firebaseUser == null) return Future.value([]);
+
+      return groupDataCollectionRefrence.get().then((value) => value.docs
+          .map((e) => GroupModel.fromMap(e.data() as Map<String, dynamic>))
+          .toList());
+    } catch (e) {
+      print(e);
+      return Future.value(<GroupModel>[]);
     }
   }
 

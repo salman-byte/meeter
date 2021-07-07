@@ -39,7 +39,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     appStateNotifier = Provider.of<AppStateNotifier>(context, listen: false);
-    currentGroupId = appStateNotifier!.getCurrentSelectedChat!.id;
+    currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
     // _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
     //     appStateNotifier!.getCurrentSelectedChat!.id!);
     // _loadMessages();
@@ -47,7 +47,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   initializeChats() {
-    currentGroupId = appStateNotifier!.getCurrentSelectedChat!.id;
+    currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
     _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
         appStateNotifier!.getCurrentSelectedChat!.id!);
     _loadMessages();
@@ -197,10 +197,6 @@ class _ChatPageState extends State<ChatPage> {
       id: const Uuid().v4(),
       text: message.text,
     );
-    // MessageModel newMessage = MessageModel(
-    //   text: textMessage.text,
-    //   author: Author(te)
-    // );
 
     _addMessage(textMessage);
   }
@@ -208,15 +204,30 @@ class _ChatPageState extends State<ChatPage> {
   void _loadMessages() async {
     List<types.Message> messages = <types.Message>[];
     _messageStream!.listen((event) {}).onData((data) {
-      data.forEach((e) {
-        if (!messages.contains(types.Message.fromJson(e.toMap())))
-          messages.add(types.Message.fromJson(e.toMap()));
+      _messages.clear();
+      // messages = _messages;
+      _messages = data.fold(_messages, (previousValue, element) {
+        // if (!_messages.contains(types.Message.fromJson(element.toMap())))
+        return [types.Message.fromJson(element.toMap()), ...previousValue];
+        // else
+        //   return previousValue;
       });
-      // print(messages);
-      _messages = messages;
-      // setState(() {
+      // _messages = messages;
+      // data.forEach((e) {
+      //   // if (!_messages.contains(types.Message.fromJson(e.toMap()))) {
+      //   // messages.add(types.Message.fromJson(e.toMap()));
+      //   _messages = [types.Message.fromJson(e.toMap()), ..._messages];
+      //   // }
+      //   // setState(() {
+      //   // });
       // });
-      appStateNotifier!.rebuildWidget();
+      // _messages = messages;
+      appStateNotifier?.rebuildWidget();
+      //   if (!_messages.contains(types.Message.fromJson(e.toMap()))) {
+      //     _addMessage(types.Message.fromJson(e.toMap()));
+      //   }
+      // });
+      // print(messages);
     });
   }
 
@@ -224,7 +235,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     ThemeData currentTheme = _themeProvider!.themeData();
     return Consumer<AppStateNotifier>(builder: (context, appstate, child) {
-      if (currentGroupId != appstate.getCurrentSelectedChat!.id) {
+      if (currentGroupId != appstate.getCurrentSelectedChat?.id) {
         appStateNotifier = appstate;
         initializeChats();
       }
@@ -324,17 +335,23 @@ class _MeetSettingsState extends State<MeetSettings> {
               onPressed: subjectText.text == ''
                   ? null
                   : () {
-                      context.pop();
-                      Future.delayed(Duration(seconds: 1), () {
-                        VxNavigator.of(context)
-                            .push(Uri.parse('/meet'), params: {
-                          'id': widget.groupId,
-                          'am': isAudioMuted,
-                          'ao': isAudioOnly,
-                          'vm': isVideoMuted,
-                          'sub': subjectText.text
-                        });
+                      Navigator.of(context).pop({
+                        'id': widget.groupId,
+                        'am': isAudioMuted,
+                        'ao': isAudioOnly,
+                        'vm': isVideoMuted,
+                        'sub': subjectText.text
                       });
+                      // Future.delayed(Duration(seconds: 1), () {
+                      //   VxNavigator.of(context)
+                      //       .push(Uri.parse('/meet'), params: {
+                      //     'id': widget.groupId,
+                      //     'am': isAudioMuted,
+                      //     'ao': isAudioOnly,
+                      //     'vm': isVideoMuted,
+                      //     'sub': subjectText.text
+                      //   });
+                      // });
                     },
               text: "Join Meeting",
             ),

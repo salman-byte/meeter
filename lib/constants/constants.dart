@@ -3,3 +3,5 @@ const String GROUPS_COLLECTION = 'GROUPS';
 const String MESSAGES_COLLECTION = 'MESSAGES';
 const String NOTES_COLLECTION = 'NOTES';
 const String EVENTS_COLLECTION = 'EVENTS';
+const String RECENT_MESSAGE_FIELD_IN_GROUP_DOCUMENT = 'recentMessage';
+const String MODIFIED_AT_FIELD_IN_GROUP_DOCUMENT = 'modifiedAt';

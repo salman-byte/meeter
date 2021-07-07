@@ -4,8 +4,9 @@ class ChatListTile extends StatelessWidget {
   final String title;
   final String subTitle;
   final String avatorUrl;
-  final String trailingText;
+  final Widget? trailingWidget;
   final bool isSelected;
+  final selectedTileColor;
 
   final void Function()? onTileTap;
   const ChatListTile(
@@ -13,14 +14,16 @@ class ChatListTile extends StatelessWidget {
       required this.title,
       required this.subTitle,
       required this.avatorUrl,
-      required this.trailingText,
+      this.trailingWidget,
       this.onTileTap,
-      this.isSelected = false})
+      this.isSelected = false,
+      this.selectedTileColor})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      selectedTileColor: selectedTileColor,
       selected: isSelected,
       onTap: onTileTap,
       title: Text(title),
@@ -34,9 +37,10 @@ class ChatListTile extends StatelessWidget {
           child: Icon(Icons.person, color: Colors.white, size: 50.0),
         ),
       ),
+      trailing: Padding(padding: EdgeInsets.all(8.0), child: trailingWidget),
       // trailing: Align(
       //   alignment: Alignment.topRight,
-      //   child: Text(trailingText),
+      //   child: trailingWidget ?? Container(),
       // ),
     );
   }

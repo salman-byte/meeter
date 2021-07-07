@@ -15,6 +15,7 @@ import 'package:meeter/res/colors.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
+import 'package:meeter/screens/create_meet.dart';
 import 'package:meeter/screens/events_page.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
@@ -280,7 +281,7 @@ class WebViewPageBody extends StatelessWidget {
   }
 }
 
-enum BodyPage { CHAT, SCHEDULE }
+enum BodyPage { CHAT, SCHEDULE, CREATE_MEET }
 
 class WebViewPageBodyForAuthenticatedUser extends StatefulWidget {
   const WebViewPageBodyForAuthenticatedUser({
@@ -363,36 +364,68 @@ class _WebViewPageBodyForAuthenticatedUserState
                     ),
                   )
                 ]),
+              ),
+              Container(
+                height: context.safePercentHeight * 10,
+                child: Row(children: [
+                  page == BodyPage.CREATE_MEET
+                      ? Container(
+                          width: context.safePercentWidth * 0.5,
+                          color: themeProvider!.themeData().accentColor,
+                        )
+                      : Container(
+                          width: context.safePercentWidth * 0.5,
+                        ),
+                  Container(
+                    // width: double.maxFinite,
+                    child: IconButton(
+                      icon: Icon(Icons.add_to_queue),
+                      onPressed: () {
+                        if (page != BodyPage.CREATE_MEET) {
+                          setState(() {
+                            page = BodyPage.CREATE_MEET;
+                          });
+                        }
+                      },
+                    ),
+                  )
+                ]),
               )
             ],
           ),
         ),
         Expanded(
           child: AnimatedSwitcher(
-            duration: Duration(milliseconds: 500),
-            child: page == BodyPage.SCHEDULE
-                ? EventPage()
-                : Row(
-                    children: [
-                      Container(
-                        width: context.percentWidth * 30,
-                        child: TabBarPageView(),
-                      ),
-                      VerticalDivider(),
-                      Expanded(
-                        child: Consumer<AppStateNotifier>(
-                            builder: (context, appstate, child) =>
-                                appstate.getCurrentSelectedChat != null
-                                    ? ChatViewWithHeader(
-                                        group: appstate.getCurrentSelectedChat!)
-                                    : Container()),
-                      ),
-                    ],
-                  ),
-          ),
+              duration: Duration(milliseconds: 500),
+              child: buildBodyPageBasedOnTheEnum),
         ),
       ],
     );
+  }
+
+  Widget get buildBodyPageBasedOnTheEnum {
+    if (page == BodyPage.CHAT)
+      return Row(
+        children: [
+          Container(
+            width: context.percentWidth * 30,
+            child: TabBarPageView(),
+          ),
+          VerticalDivider(),
+          Expanded(
+            child: Consumer<AppStateNotifier>(
+                builder: (context, appstate, child) =>
+                    appstate.getCurrentSelectedChat != null
+                        ? ChatViewWithHeader(
+                            group: appstate.getCurrentSelectedChat!)
+                        : Container()),
+          ),
+        ],
+      );
+    else if (page == BodyPage.CREATE_MEET)
+      return CreateMeet();
+    else
+      return EventPage();
   }
 }
 
@@ -494,8 +527,8 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
     ]);
   }
 
-  Future buildShowAnimatedMeetingDialog(BuildContext context, String id) {
-    return showAnimatedDialog(
+  Future buildShowAnimatedMeetingDialog(BuildContext context, String id) async {
+    Map<String, dynamic> params = await showAnimatedDialog(
       duration: Duration(seconds: 1),
       context: context,
       barrierDismissible: true,
@@ -507,7 +540,8 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
       },
       animationType: DialogTransitionType.slideFromBottom,
       curve: Curves.fastLinearToSlowEaseIn,
-    );
+    ) as Map<String, dynamic>;
+    VxNavigator.of(context).push(Uri.parse('/meet'), params: params);
   }
 
   void scheduleCalenderEventAndMeetForLater(CalendarEventModel event) {
@@ -608,32 +642,73 @@ class ChatGroupList extends StatelessWidget {
         stream: FirestoreService.instance.getGroupsListAsStream(),
         builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
           if (!snapshot.hasData) return LinearProgressIndicator();
+          if (snapshot.hasError) {
+            print(snapshot.error);
+            return Text(snapshot.error.toString());
+          }
           return Consumer<AppStateNotifier>(
             builder: (context, appState, child) {
               String? currentSelectedChatId =
                   appState.getCurrentSelectedChat?.id ?? '';
-              return ListView.builder(
-                  itemCount: snapshot.data != null ? snapshot.data!.length : 0,
-                  itemBuilder: (context, index) {
-                    print(currentSelectedChatId);
-                    // return Container();
-                    return ChatListTile(
-                        isSelected:
-                            snapshot.data![index].id == currentSelectedChatId,
-                        onTileTap: () {
-                          appState.setCurrentSelectedChat =
-                              snapshot.data![index];
-                        },
-                        title: snapshot.data![index].name!,
-                        subTitle: '',
-                        avatorUrl: '',
-                        trailingText: '');
-                  });
+              return Consumer<ThemeProvider>(
+                builder: (context, theme, child) => ListView.builder(
+                    itemCount:
+                        snapshot.data != null ? snapshot.data!.length : 0,
+                    itemBuilder: (context, index) {
+                      print(currentSelectedChatId);
+                      // return Container();
+                      return ChatListTile(
+                          selectedTileColor:
+                              theme.themeMode().selectedTileColor,
+                          isSelected:
+                              snapshot.data![index].id == currentSelectedChatId,
+                          onTileTap: () {
+                            appState.setCurrentSelectedChat =
+                                snapshot.data![index];
+                            FirestoreService.instance
+                                .markLastMessageAsReadInGroupDoc(
+                                    groupId: snapshot.data![index].id!);
+                          },
+                          title: snapshot.data![index].name!,
+                          subTitle: snapshot
+                                  .data?[index].recentMessage?.messageText ??
+                              '',
+                          avatorUrl: '',
+                          trailingWidget: buildTrailingWidget(
+                              snapshot, index, currentSelectedChatId));
+                    }),
+              );
             },
           );
         },
       ),
     );
+  }
+
+  SizedBox buildTrailingWidget(AsyncSnapshot<List<GroupModel>> snapshot,
+      int index, String currentSelectedChatId) {
+    if ((snapshot.data![index].id != currentSelectedChatId) &&
+        snapshot.data?[index].recentMessage == null) {
+      return SizedBox.shrink(
+        child: Icon(
+          Icons.fiber_new,
+          color: Colors.green,
+        ),
+      );
+    } else if (snapshot.data![index].id != currentSelectedChatId &&
+            snapshot.data?[index].recentMessage?.readBy != null
+        ? (!(snapshot.data![index].recentMessage!.readBy!
+            .contains(FirestoreService.instance.firebaseUser?.uid)))
+        : false) {
+      return SizedBox.shrink(
+        child: Icon(
+          Icons.brightness_1_sharp,
+          size: 10,
+          color: Colors.green,
+        ),
+      );
+    } else
+      return SizedBox.shrink();
   }
 }
 
@@ -654,10 +729,10 @@ class AllUsersList extends StatelessWidget {
               itemBuilder: (context, index) {
                 // return Container();
                 return ChatListTile(
-                    title: snapshot.data![index].displayName!,
-                    subTitle: '',
-                    avatorUrl: '',
-                    trailingText: '');
+                  title: snapshot.data![index].displayName!,
+                  subTitle: '',
+                  avatorUrl: '',
+                );
               });
         },
       ),
