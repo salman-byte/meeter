@@ -93,6 +93,17 @@ class _MyAppState extends State<MyApp> {
     routes: {
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+      // '/': (uri, params) => MaterialPage(
+      //         child: Meeting(
+      //       id: '7a8a1896-6e1f-4368-8e6d-edeca0988cb2',
+      //       subject: uri.queryParameters['sub'] ?? 'subject',
+
+      //       //   'id': '7a8a1896-6e1f-4368-8e6d-edeca0988cb2',
+      //       //   'am': true,
+      //       //   'ao': true,
+      //       //   'vm': true,
+      //       //   'sub': 'subject',
+      //     )),
       '/schedule': (uri, params) => MaterialPage(child: EventPage()),
       '/signup': (uri, params) => MaterialPage(
               child: SignInSignUpFlow(
@@ -101,9 +112,6 @@ class _MyAppState extends State<MyApp> {
       '/meet': (uri, params) => MaterialPage(
             child: Meeting(
               id: uri.queryParameters['id'] ?? params['id'],
-              isAudioMuted: uri.queryParameters['am'] as bool? ?? true,
-              isAudioOnly: uri.queryParameters['ao'] as bool? ?? true,
-              isVideoMuted: uri.queryParameters['vm'] as bool? ?? true,
               subject: uri.queryParameters['sub'] ?? params['sub'],
             ),
           )

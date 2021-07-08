@@ -28,7 +28,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
-  bool attachmentBoxOpen = false;
+  ValueNotifier<bool> attachmentBoxOpen = ValueNotifier<bool>(false);
   bool isAttachmentLoading = false;
   String? currentGroupId;
   ThemeProvider? _themeProvider;
@@ -48,6 +48,7 @@ class _ChatPageState extends State<ChatPage> {
 
   initializeChats() {
     currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
+    print('groupid: $currentGroupId');
     _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
         appStateNotifier!.getCurrentSelectedChat!.id!);
     _loadMessages();
@@ -73,9 +74,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleAtachmentPressed() {
+    attachmentBoxOpen.value = !attachmentBoxOpen.value;
     setState(() {
       isAttachmentLoading = isAttachmentLoading ? !isAttachmentLoading : false;
-      attachmentBoxOpen = !attachmentBoxOpen;
     });
   }
 
@@ -202,34 +203,40 @@ class _ChatPageState extends State<ChatPage> {
             user: _user,
           ),
         ),
-        AnimatedContainer(
-          height: attachmentBoxOpen ? context.safePercentHeight * 15 : 0,
-          duration: Duration(milliseconds: 500),
-          child: AnimatedSwitcher(
-            duration: Duration(milliseconds: 500),
-            child: !attachmentBoxOpen
-                ? Container()
-                : Wrap(
-                    runSpacing: 5,
-                    spacing: 5,
-                    alignment: WrapAlignment.start,
-                    children: [
-                        iconCreation(
-                          text: 'Photo',
-                          icons: Icons.image_outlined,
-                          onTap: () {
-                            _handleImageSelection();
-                          },
-                        ),
-                        iconCreation(
-                            onTap: () {
-                              _handleFileSelection();
-                            },
-                            text: 'File',
-                            icons: Icons.attach_file),
-                      ]),
-          ),
-        )
+        ValueListenableBuilder<bool>(
+          builder:
+              (BuildContext context, bool attachmentBoxOpen, Widget? child) {
+            return AnimatedContainer(
+              height: attachmentBoxOpen ? context.safePercentHeight * 15 : 0,
+              duration: Duration(milliseconds: 500),
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+                child: !attachmentBoxOpen
+                    ? Container()
+                    : Wrap(
+                        runSpacing: 5,
+                        spacing: 5,
+                        alignment: WrapAlignment.start,
+                        children: [
+                            iconCreation(
+                              text: 'Photo',
+                              icons: Icons.image_outlined,
+                              onTap: () {
+                                _handleImageSelection();
+                              },
+                            ),
+                            iconCreation(
+                                onTap: () {
+                                  _handleFileSelection();
+                                },
+                                text: 'File',
+                                icons: Icons.attach_file),
+                          ]),
+              ),
+            );
+          },
+          valueListenable: attachmentBoxOpen,
+        ),
       ]);
     });
   }
@@ -272,10 +279,6 @@ class MeetSettings extends StatefulWidget {
 class _MeetSettingsState extends State<MeetSettings> {
   final subjectText = TextEditingController();
 
-  bool? isAudioOnly = true;
-  bool? isAudioMuted = true;
-  bool? isVideoMuted = true;
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -297,48 +300,18 @@ class _MeetSettingsState extends State<MeetSettings> {
           SizedBox(
             height: 14.0,
           ),
-          CheckboxListTile(
-            title: Text("Audio Only"),
-            value: isAudioOnly,
-            onChanged: _onAudioOnlyChanged,
-          ),
-          SizedBox(
-            height: 14.0,
-          ),
-          CheckboxListTile(
-            title: Text("Audio Muted"),
-            value: isAudioMuted,
-            onChanged: _onAudioMutedChanged,
-          ),
-          SizedBox(
-            height: 14.0,
-          ),
-          CheckboxListTile(
-            title: Text("Video Muted"),
-            value: isVideoMuted,
-            onChanged: _onVideoMutedChanged,
-          ),
           Divider(
             height: 48.0,
             thickness: 2.0,
           ),
-          SizedBox(
-            height: 64.0,
-            // width: double.maxFinite,
-            child: CustomButton(
-              onPressed: subjectText.text == ''
-                  ? null
-                  : () {
-                      Navigator.of(context).pop({
-                        'id': widget.groupId,
-                        'am': isAudioMuted,
-                        'ao': isAudioOnly,
-                        'vm': isVideoMuted,
-                        'sub': subjectText.text
-                      });
-                    },
-              text: "Join Meeting",
-            ),
+          CustomButton(
+            onPressed: subjectText.text == ''
+                ? null
+                : () {
+                    Navigator.of(context)
+                        .pop({'id': widget.groupId, 'sub': subjectText.text});
+                  },
+            text: "Join Meeting",
           ),
           SizedBox(
             height: 48.0,
@@ -346,23 +319,5 @@ class _MeetSettingsState extends State<MeetSettings> {
         ],
       ),
     );
-  }
-
-  _onAudioOnlyChanged(bool? value) {
-    setState(() {
-      isAudioOnly = value;
-    });
-  }
-
-  _onAudioMutedChanged(bool? value) {
-    setState(() {
-      isAudioMuted = value;
-    });
-  }
-
-  _onVideoMutedChanged(bool? value) {
-    setState(() {
-      isVideoMuted = value;
-    });
   }
 }
