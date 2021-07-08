@@ -462,69 +462,72 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.max, children: [
-      Container(
-          child: Row(
+    return Column(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text(widget.group.name!),
-          ),
-          PopupMenuButton(onSelected: (value) async {
-            switch (value) {
-              case 1:
-                buildShowAnimatedMeetingDialog(context, widget.group.id!);
-                print('pushing route');
-                break;
-              case 2:
-                final CalendarEventModel? event = await showDialog(
-                    context: context,
-                    builder: (context) => const CreateEventDialog());
-                if (event != null) {
-                  scheduleCalenderEventAndMeetForLater(event);
+          Container(
+              child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Text(widget.group.name!),
+              ),
+              PopupMenuButton(onSelected: (value) async {
+                switch (value) {
+                  case 1:
+                    buildShowAnimatedMeetingDialog(context, widget.group.id!);
+                    print('pushing route');
+                    break;
+                  case 2:
+                    final CalendarEventModel? event = await showDialog(
+                        context: context,
+                        builder: (context) => const CreateEventDialog());
+                    if (event != null) {
+                      scheduleCalenderEventAndMeetForLater(event);
+                    }
+                    break;
+                  case 3:
+                    setState(() {
+                      notesOpen = !notesOpen;
+                    });
+                    break;
+                  default:
                 }
-                break;
-              case 3:
-                setState(() {
-                  notesOpen = !notesOpen;
-                });
-                break;
-              default:
-            }
 
-            // VxNavigator.of(context).push(Uri.parse('/meet'));
-          }, itemBuilder: (context) {
-            return <PopupMenuItem>[
-              PopupMenuItem(value: 1, child: Text('Start meeting')),
-              PopupMenuItem(value: 2, child: Text('Schedule meeting')),
-              PopupMenuItem(value: 3, child: Text('Notes')),
-            ];
-          })
-        ],
-      )),
-      Divider(),
-      AnimatedContainer(
-        duration: Duration(seconds: 1),
-        child: notesOpen
-            ? LimitedBox(
-                maxHeight: context.safePercentHeight * 30,
-                child: SingleChildScrollView(
-                  child: Container(
-                    width: double.maxFinite,
-                    color: Colors.amber,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(noteText),
+                // VxNavigator.of(context).push(Uri.parse('/meet'));
+              }, itemBuilder: (context) {
+                return <PopupMenuItem>[
+                  PopupMenuItem(value: 1, child: Text('Start meeting')),
+                  PopupMenuItem(value: 2, child: Text('Schedule meeting')),
+                  PopupMenuItem(value: 3, child: Text('Notes')),
+                ];
+              })
+            ],
+          )),
+          Divider(),
+          AnimatedContainer(
+            duration: Duration(seconds: 1),
+            child: notesOpen
+                ? LimitedBox(
+                    maxHeight: context.safePercentHeight * 30,
+                    child: SingleChildScrollView(
+                      child: Container(
+                        width: double.maxFinite,
+                        color: Colors.amber,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(noteText),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-            : Container(),
-      ),
-      ChatPage(),
-    ]);
+                  )
+                : Container(),
+          ),
+          Expanded(child: ChatPage()),
+        ]);
   }
 
   Future buildShowAnimatedMeetingDialog(BuildContext context, String id) async {

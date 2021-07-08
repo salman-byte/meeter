@@ -45,7 +45,7 @@ class AuthStatusNotifier extends ChangeNotifier {
   bool get isUserAuthenticated =>
       _currentStatus == AuthenticationStatus.SIGNEDIN ? true : false;
 
-  // rebuildRoot() {
-  //   notifyListeners();
-  // }
+  rebuildRoot() {
+    notifyListeners();
+  }
 }

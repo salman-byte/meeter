@@ -28,6 +28,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
+  bool attachmentBoxOpen = false;
+  bool isAttachmentLoading = false;
   String? currentGroupId;
   ThemeProvider? _themeProvider;
   AppStateNotifier? appStateNotifier;
@@ -40,9 +42,7 @@ class _ChatPageState extends State<ChatPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     appStateNotifier = Provider.of<AppStateNotifier>(context, listen: false);
     currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
-    // _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
-    //     appStateNotifier!.getCurrentSelectedChat!.id!);
-    // _loadMessages();
+
     initializeChats();
   }
 
@@ -73,46 +73,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleAtachmentPressed() {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return SizedBox(
-          height: 144,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleImageSelection();
-                },
-                child: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Photo'),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleFileSelection();
-                },
-                child: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('File'),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Cancel'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    setState(() {
+      isAttachmentLoading = isAttachmentLoading ? !isAttachmentLoading : false;
+      attachmentBoxOpen = !attachmentBoxOpen;
+    });
   }
 
   void _handleFileSelection() async {
@@ -121,6 +85,9 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     if (result != null) {
+      setState(() {
+        isAttachmentLoading = true;
+      });
       final uri = await FirebaseStorageService.instance.uploadImageAndGetUrl(
           imgName: result.files.single.name, data: result.files.single.bytes!);
       final message = types.FileMessage(
@@ -132,7 +99,7 @@ class _ChatPageState extends State<ChatPage> {
         size: result.files.single.size,
         uri: uri,
       );
-
+      _handleAtachmentPressed();
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -164,6 +131,7 @@ class _ChatPageState extends State<ChatPage> {
       );
       print(message.uri);
       print(result.path);
+      _handleAtachmentPressed();
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -202,32 +170,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _loadMessages() async {
-    List<types.Message> messages = <types.Message>[];
     _messageStream!.listen((event) {}).onData((data) {
       _messages.clear();
-      // messages = _messages;
       _messages = data.fold(_messages, (previousValue, element) {
-        // if (!_messages.contains(types.Message.fromJson(element.toMap())))
         return [types.Message.fromJson(element.toMap()), ...previousValue];
-        // else
-        //   return previousValue;
       });
-      // _messages = messages;
-      // data.forEach((e) {
-      //   // if (!_messages.contains(types.Message.fromJson(e.toMap()))) {
-      //   // messages.add(types.Message.fromJson(e.toMap()));
-      //   _messages = [types.Message.fromJson(e.toMap()), ..._messages];
-      //   // }
-      //   // setState(() {
-      //   // });
-      // });
-      // _messages = messages;
+
       appStateNotifier?.rebuildWidget();
-      //   if (!_messages.contains(types.Message.fromJson(e.toMap()))) {
-      //     _addMessage(types.Message.fromJson(e.toMap()));
-      //   }
-      // });
-      // print(messages);
     });
   }
 
@@ -239,31 +188,76 @@ class _ChatPageState extends State<ChatPage> {
         appStateNotifier = appstate;
         initializeChats();
       }
-      return
-          // (appstate.getCurrentSelectedChat!.id != widget.groupId ||
-          //         _messages.length == 0)
-          //     ?
-          //     // _messages.clear()
-          //     // _loadMessages();
-
-          //     LinearProgressIndicator()
-          //     : Container(),
-          Expanded(
-        child: new Chat(
-          theme: DefaultChatTheme(
-              // inputBorderRadius: BorderRadius.circular(30),
-              // inputBackgroundColor:
-              //     _themeProvider!.themeMode().inputBackgroundColor!,
-              backgroundColor: currentTheme.backgroundColor),
-          messages: _messages,
-          onAttachmentPressed: _handleAtachmentPressed,
-          onMessageTap: _handleMessageTap,
-          onPreviewDataFetched: _handlePreviewDataFetched,
-          onSendPressed: _handleSendPressed,
-          user: _user,
+      return Column(children: [
+        Expanded(
+          child: new Chat(
+            theme:
+                DefaultChatTheme(backgroundColor: currentTheme.backgroundColor),
+            isAttachmentUploading: isAttachmentLoading,
+            messages: _messages,
+            onAttachmentPressed: _handleAtachmentPressed,
+            onMessageTap: _handleMessageTap,
+            onPreviewDataFetched: _handlePreviewDataFetched,
+            onSendPressed: _handleSendPressed,
+            user: _user,
+          ),
         ),
-      );
+        AnimatedContainer(
+          height: attachmentBoxOpen ? context.safePercentHeight * 15 : 0,
+          duration: Duration(milliseconds: 500),
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: 500),
+            child: !attachmentBoxOpen
+                ? Container()
+                : Wrap(
+                    runSpacing: 5,
+                    spacing: 5,
+                    alignment: WrapAlignment.start,
+                    children: [
+                        iconCreation(
+                          text: 'Photo',
+                          icons: Icons.image_outlined,
+                          onTap: () {
+                            _handleImageSelection();
+                          },
+                        ),
+                        iconCreation(
+                            onTap: () {
+                              _handleFileSelection();
+                            },
+                            text: 'File',
+                            icons: Icons.attach_file),
+                      ]),
+          ),
+        )
+      ]);
     });
+  }
+
+  Widget iconCreation(
+      {required IconData icons, required String text, void Function()? onTap}) {
+    return GestureDetector(
+      onTap: onTap ?? () {},
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            // backgroundColor: color,
+            child: Icon(
+              icons,
+              // semanticLabel: "Help",
+              size: 29,
+            ),
+          ),
+          SizedBox(
+            height: 5,
+          ),
+          Text(
+            text,
+          )
+        ],
+      ),
+    );
   }
 }
 
@@ -342,16 +336,6 @@ class _MeetSettingsState extends State<MeetSettings> {
                         'vm': isVideoMuted,
                         'sub': subjectText.text
                       });
-                      // Future.delayed(Duration(seconds: 1), () {
-                      //   VxNavigator.of(context)
-                      //       .push(Uri.parse('/meet'), params: {
-                      //     'id': widget.groupId,
-                      //     'am': isAudioMuted,
-                      //     'ao': isAudioOnly,
-                      //     'vm': isVideoMuted,
-                      //     'sub': subjectText.text
-                      //   });
-                      // });
                     },
               text: "Join Meeting",
             ),
