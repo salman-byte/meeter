@@ -281,30 +281,32 @@ class _MeetSettingsState extends State<MeetSettings> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           SizedBox(
             height: 16.0,
           ),
-          TextField(
-            controller: subjectText,
-            onChanged: (value) {
-              setState(() {});
-            },
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: "Subject",
+          Container(
+            width: context.safePercentWidth * 40,
+            child: TextField(
+              controller: subjectText,
+              onChanged: (value) {
+                setState(() {});
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: "Subject",
+              ),
             ),
           ),
           SizedBox(
             height: 14.0,
           ),
-          Divider(
-            height: 48.0,
-            thickness: 2.0,
-          ),
           CustomButton(
+            autoSize: true,
             onPressed: subjectText.text == ''
                 ? null
                 : () {
@@ -312,9 +314,6 @@ class _MeetSettingsState extends State<MeetSettings> {
                         .pop({'id': widget.groupId, 'sub': subjectText.text});
                   },
             text: "Join Meeting",
-          ),
-          SizedBox(
-            height: 48.0,
           ),
         ],
       ),

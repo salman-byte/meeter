@@ -459,7 +459,6 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
   @override
   void didUpdateWidget(covariant ChatViewWithHeader oldWidget) {
     print('groupid: ${widget.group.id!}');
-    // TODO: implement didUpdateWidget
     FirestoreService.instance.getNoteDoc(widget.group.id!).then((value) {
       setState(() {
         noteText = value;
@@ -539,7 +538,7 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
   }
 
   Future buildShowAnimatedMeetingDialog(BuildContext context, String id) async {
-    Map<String, dynamic> params = await showAnimatedDialog(
+    Map<String, dynamic>? params = await showAnimatedDialog(
       duration: Duration(seconds: 1),
       context: context,
       barrierDismissible: true,
@@ -551,8 +550,10 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
       },
       animationType: DialogTransitionType.slideFromBottom,
       curve: Curves.fastLinearToSlowEaseIn,
-    ) as Map<String, dynamic>;
-    VxNavigator.of(context).push(Uri.parse('/meet'), params: params);
+    );
+    if (params != null) {
+      VxNavigator.of(context).push(Uri.parse('/meet'), params: params);
+    }
   }
 
   void scheduleCalenderEventAndMeetForLater(CalendarEventModel event) {
@@ -586,57 +587,40 @@ class TabBarPageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            new Container(
-              child: IconButton(
-                icon: Icon(Icons.group_add),
-                onPressed: () {
-                  showCreateGroupDialog(context);
-                },
-              ),
-            ),
-          ],
-          bottom: new PreferredSize(
-            preferredSize: Size(double.infinity, kToolbarHeight),
-            child: Column(
-              children: [
-                Container(
-                  child: new TabBar(
-                    tabs: [
-                      Tab(icon: Icon(Icons.chat)),
-                      Tab(icon: Icon(Icons.people)),
-                      Tab(icon: Icon(Icons.more)),
-                    ],
-                  ),
+        appBar: PreferredSize(
+          preferredSize: Size(double.infinity, context.safePercentHeight * 10),
+          child: Column(
+            children: [
+              Container(
+                child: new TabBar(
+                  tabs: [
+                    Tab(
+                      icon: Icon(Icons.chat),
+                      text: 'chats',
+                      iconMargin: EdgeInsets.only(bottom: 5),
+                    ),
+                    Tab(
+                      icon: Icon(Icons.person),
+                      text: 'available',
+                      iconMargin: EdgeInsets.only(bottom: 5),
+                    ),
+                    // Tab(icon: Icon(Icons.more)),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         body: TabBarView(
           children: [
             ChatGroupList(),
             AllUsersList(),
-            Icon(Icons.more),
+            // Icon(Icons.more),
           ],
         ),
       ),
-    );
-  }
-
-  Future showCreateGroupDialog(BuildContext context) {
-    return showAnimatedDialog(
-      duration: Duration(seconds: 1),
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(child: PersonNameInputWidget());
-      },
-      animationType: DialogTransitionType.slideFromBottom,
-      curve: Curves.fastLinearToSlowEaseIn,
     );
   }
 }
@@ -666,6 +650,9 @@ class ChatGroupList extends StatelessWidget {
                     itemCount:
                         snapshot.data != null ? snapshot.data!.length : 0,
                     itemBuilder: (context, index) {
+                      final recentMessage =
+                          snapshot.data?[index].recentMessage?.messageText ??
+                              '';
                       print(currentSelectedChatId);
                       // return Container();
                       return ChatListTile(
@@ -681,9 +668,9 @@ class ChatGroupList extends StatelessWidget {
                                     groupId: snapshot.data![index].id!);
                           },
                           title: snapshot.data![index].name!,
-                          subTitle: snapshot
-                                  .data?[index].recentMessage?.messageText ??
-                              '',
+                          subTitle: recentMessage.length > 15
+                              ? recentMessage.substring(1, 15)
+                              : recentMessage,
                           avatorUrl: '',
                           trailingWidget: buildTrailingWidget(
                               snapshot, index, currentSelectedChatId));

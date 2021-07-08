@@ -105,7 +105,8 @@ class FirestoreService {
   }
 
 //create Message document in database
-  Future createMessageDoc(MessageModel message, String groupId) async {
+  Future createMessageDoc(MessageModel message, String groupId,
+      {bool isNewGroup = false}) async {
     try {
       if (firebaseUser == null) return;
       await FirebaseFirestore.instance
@@ -114,7 +115,9 @@ class FirestoreService {
           .collection(MESSAGES_COLLECTION)
           .doc()
           .set(message.toMap());
-      await updateRecentMessageInGroupDoc(groupId: groupId, message: message);
+      if (!isNewGroup) {
+        await updateRecentMessageInGroupDoc(groupId: groupId, message: message);
+      }
       return;
     } catch (e) {
       print(e);

@@ -33,8 +33,8 @@ class ChatListTile extends StatelessWidget {
         child: Container(
           // height: 70.0,
           // width: 70.0,
-          color: Color(0xffFF0E58),
-          child: Icon(Icons.person, color: Colors.white, size: 50.0),
+
+          child: Icon(Icons.people, size: 30),
         ),
       ),
       trailing: Padding(padding: EdgeInsets.all(8.0), child: trailingWidget),
