@@ -1,21 +1,23 @@
 {
-    "hosting": {
-        "public": "build/web",
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ],
-        "rewrites": [{
-            "source": "**",
-            "destination": "/index.html"
-        }],
-        "headers": [{
-            "source": "**/*.@(eot|otf|ttf|ttc|woff|font.css)",
-            "headers": [{
-                "key": "Access-Control-Allow-Origin",
-                "value": "*"
-            }]
-        }]
-    }
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
 }

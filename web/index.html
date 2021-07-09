@@ -50,6 +50,7 @@
         }
     </script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="/__/firebase/8.7.1/firebase-analytics.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-storage.js"></script>
@@ -58,14 +59,29 @@
     <!-- Firebase Configuration -->
     <script>
         // Your web app's Firebase configuration
-        var firebaseConfig = {
-            apiKey: "AIzaSyC9yvTQ9PWlQoyHf3vtzW8AloSFSy-GMFo",
-            authDomain: "meeter-app-17608.firebaseapp.com",
-            projectId: "meeter-app-17608",
-            storageBucket: "meeter-app-17608.appspot.com",
-            messagingSenderId: "102662386510",
-            appId: "1:102662386510:web:b475a1c3db88d778d3241f"
+        // var firebaseConfig = {
+        //     apiKey: "AIzaSyC9yvTQ9PWlQoyHf3vtzW8AloSFSy-GMFo",
+        //     authDomain: "meeter-app-17608.firebaseapp.com",
+        //     projectId: "meeter-app-17608",
+        //     storageBucket: "meeter-app-17608.appspot.com",
+        //     messagingSenderId: "102662386510",
+        //     appId: "1:102662386510:web:b475a1c3db88d778d3241f"
+        // };
+
+
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDM0857YjPvSTwFm9YyqFqtjBqvAxdAFl8",
+            authDomain: "meeter-e2ad8.firebaseapp.com",
+            projectId: "meeter-e2ad8",
+            storageBucket: "meeter-e2ad8.appspot.com",
+            messagingSenderId: "1083877725405",
+            appId: "1:1083877725405:web:aad84cf17a4e337f223734",
+            measurementId: "G-P3TCER4HC8"
         };
+
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         // JitsiMeetJS.init();
