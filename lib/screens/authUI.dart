@@ -5,6 +5,7 @@ import '../services/emailAuthService.dart';
 import '../utils/theme_notifier.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
+import 'authUiCOmponents/forgotPassword.dart';
 
 class SignInSignUpFlow extends StatefulWidget {
   final bool inDialogMode;
@@ -269,7 +270,17 @@ class LoginForm extends StatelessWidget {
               },
               buttonColor: Colors.red,
               textColor: Colors.white,
-            )
+            ),
+            SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                VxNavigator.of(context).push(Uri.parse(ForgotPassword.id));
+              },
+              child: Text(
+                'Forgot Password?',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
           ],
         ),
       ),
@@ -310,7 +321,6 @@ class SignupForm extends StatelessWidget {
           children: <Widget>[
             CustomTextField(
               controller: nameInputController,
-              obscureText: true,
               labelText: "Full Name",
               onChanged: (value) {
                 password = value;

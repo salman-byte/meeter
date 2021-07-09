@@ -12,6 +12,8 @@ import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/models/userModel.dart';
 import 'package:meeter/res/colors.dart';
+import 'package:meeter/screens/authUiCOmponents/confirmEmail.dart';
+import 'package:meeter/screens/authUiCOmponents/forgotPassword.dart';
 
 // import 'package:meeter/chat_area.dart';
 import 'package:meeter/screens/chat_page.dart';
@@ -93,6 +95,10 @@ class _MyAppState extends State<MyApp> {
     routes: {
       '/': (uri, params) =>
           MaterialPage(child: MyHomePage(title: 'Meeter Home Page')),
+      '/forgot-password': (uri, params) =>
+          MaterialPage(child: ForgotPassword()),
+      '/confirm-email': (uri, params) => MaterialPage(child: ConfirmEmail()),
+      // '/': (uri, params) => MaterialPage(child: ConfirmEmail()),
       // '/': (uri, params) => MaterialPage(
       //         child: Meeting(
       //       id: '7a8a1896-6e1f-4368-8e6d-edeca0988cb2',
