@@ -85,8 +85,8 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         isAttachmentLoading = true;
       });
-      final uri = await FirebaseStorageService.instance.uploadImageAndGetUrl(
-          imgName: result.files.single.name, data: result.files.single.bytes!);
+      final uri = await FirebaseStorageService.instance.uploadDocumentAndGetUrl(
+          docName: result.files.single.name, data: result.files.single.bytes!);
       final message = types.FileMessage(
         author: _user,
         createdAt: DateTime.now().millisecondsSinceEpoch,
