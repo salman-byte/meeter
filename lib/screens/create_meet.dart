@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cr_calendar/cr_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
+import 'package:meeter/constants/constants.dart';
 import 'package:meeter/models/eventModel.dart';
 import 'package:meeter/models/groupModel.dart';
 import 'package:meeter/models/messageModel.dart';
@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:meeter/services/firestoreService.dart';
-import 'package:meeter/utils/create_group.dart';
 import 'package:meeter/widgets/chat_list_tile.dart';
 
 class CreateMeet extends StatefulWidget {
@@ -446,8 +445,8 @@ class _CreateMeetState extends State<CreateMeet> {
   }
 
   Future scheduleCalenderEventAndMeetForLater(CalendarEventModel event) async {
-    String meetLink =
-        'meeter-app-17608.web.app/meet?id=${selectedGroup?.id ?? newGroupId}&sub=${event.name.replaceAll(' ', '+')}';
+    String meetLink = HOST_URL +
+        'meet?id=${selectedGroup?.id ?? newGroupId}&sub=${event.name.replaceAll(' ', '+')}';
     await FirestoreService.instance.createMessageDoc(
         _messageModel!, selectedGroup?.id ?? newGroupId,
         isNewGroup: selectedGroup == null);
@@ -471,22 +470,23 @@ class _CreateMeetState extends State<CreateMeet> {
             (previousValue, element) => [
                   ...previousValue,
                   SizedBox(
-                      width: context.safePercentWidth * 30,
-                      height: context.safePercentHeight * 10,
-                      child: ChatListTile(
-                          onTileTap: () {
-                            setState(() {
-                              selectedGroup = element;
-                            });
-                          },
-                          selectedTileColor:
-                              _themeProvider?.themeMode().selectedTileColor,
-                          isSelected: selectedGroup?.id == element.id,
-                          title: element.name!,
-                          subTitle: element.members?.length != null
-                              ? element.members!.length.toString() + ' members'
-                              : '',
-                          avatorUrl: ''))
+                    width: context.safePercentWidth * 30,
+                    height: context.safePercentHeight * 10,
+                    child: ChatListTile(
+                        onTileTap: () {
+                          setState(() {
+                            selectedGroup = element;
+                          });
+                        },
+                        selectedTileColor:
+                            _themeProvider?.themeMode().selectedTileColor,
+                        isSelected: selectedGroup?.id == element.id,
+                        title: element.name!,
+                        subTitle: element.members?.length != null
+                            ? element.members!.length.toString() + ' members'
+                            : '',
+                        avatorUrl: ''),
+                  )
                 ]),
       ),
     );
@@ -524,8 +524,8 @@ class _CreateMeetState extends State<CreateMeet> {
   }
 
   void showEventDataOnScreen(CalendarEventModel event) {
-    String meetLink =
-        'meeter-app-17608.web.app/meet?id=${selectedGroup?.id ?? newGroupId}&sub=${event.name.replaceAll(' ', '+')}';
+    String meetLink = HOST_URL +
+        'meet?id=${selectedGroup?.id ?? newGroupId}&sub=${event.name.replaceAll(' ', '+')}';
 
     MessageModel messageModel = MessageModel(
         id: const Uuid().v4(),

@@ -1,23 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/services/firebaseStorageService.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:meeter/utils/theme_notifier.dart';
-import 'package:meeter/widgets/custom_button.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import 'package:velocity_x/velocity_x.dart';
+import 'chatPageComponents.dart/attachmentBox.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -203,120 +199,12 @@ class _ChatPageState extends State<ChatPage> {
             user: _user,
           ),
         ),
-        ValueListenableBuilder<bool>(
-          builder:
-              (BuildContext context, bool attachmentBoxOpen, Widget? child) {
-            return AnimatedContainer(
-              height: attachmentBoxOpen ? context.safePercentHeight * 15 : 0,
-              duration: Duration(milliseconds: 500),
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 500),
-                child: !attachmentBoxOpen
-                    ? Container()
-                    : Wrap(
-                        runSpacing: 5,
-                        spacing: 5,
-                        alignment: WrapAlignment.start,
-                        children: [
-                            iconCreation(
-                              text: 'Photo',
-                              icons: Icons.image_outlined,
-                              onTap: () {
-                                _handleImageSelection();
-                              },
-                            ),
-                            iconCreation(
-                                onTap: () {
-                                  _handleFileSelection();
-                                },
-                                text: 'File',
-                                icons: Icons.attach_file),
-                          ]),
-              ),
-            );
-          },
-          valueListenable: attachmentBoxOpen,
+        AttachmentBox(
+          attachmentBoxOpen: attachmentBoxOpen,
+          handleFileSelection: _handleFileSelection,
+          handleImageSelection: _handleImageSelection,
         ),
       ]);
     });
-  }
-
-  Widget iconCreation(
-      {required IconData icons, required String text, void Function()? onTap}) {
-    return GestureDetector(
-      onTap: onTap ?? () {},
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            // backgroundColor: color,
-            child: Icon(
-              icons,
-              // semanticLabel: "Help",
-              size: 29,
-            ),
-          ),
-          SizedBox(
-            height: 5,
-          ),
-          Text(
-            text,
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class MeetSettings extends StatefulWidget {
-  final String groupId;
-  const MeetSettings({Key? key, required this.groupId}) : super(key: key);
-
-  @override
-  _MeetSettingsState createState() => _MeetSettingsState();
-}
-
-class _MeetSettingsState extends State<MeetSettings> {
-  final subjectText = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          SizedBox(
-            height: 16.0,
-          ),
-          Container(
-            width: context.safePercentWidth * 40,
-            child: TextField(
-              controller: subjectText,
-              onChanged: (value) {
-                setState(() {});
-              },
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: "Subject",
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 14.0,
-          ),
-          CustomButton(
-            autoSize: true,
-            onPressed: subjectText.text == ''
-                ? null
-                : () {
-                    Navigator.of(context)
-                        .pop({'id': widget.groupId, 'sub': subjectText.text});
-                  },
-            text: "Join Meeting",
-          ),
-        ],
-      ),
-    );
   }
 }

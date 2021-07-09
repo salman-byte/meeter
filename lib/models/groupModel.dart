@@ -100,27 +100,3 @@ class RecentMessage {
         "sentAt": sentAt == null ? null : sentAt,
       };
 }
-
-// Timestamp timestampFromMap(String str) => Timestamp.fromMap(json.decode(str));
-
-// String timestampToMap(Timestamp data) => json.encode(data.toMap());
-
-// class Timestamp {
-//   Timestamp({
-//     required this.seconds,
-//     required this.nanoseconds,
-//   });
-
-//   String seconds;
-//   String nanoseconds;
-
-//   factory Timestamp.fromMap(Map<String, dynamic> json) => Timestamp(
-//         seconds: json["seconds"] == null ? null : json["seconds"],
-//         nanoseconds: json["nanoseconds"] == null ? null : json["nanoseconds"],
-//       );
-
-//   Map<String, dynamic> toMap() => {
-//         "seconds": seconds == null ? null : seconds,
-//         "nanoseconds": nanoseconds == null ? null : nanoseconds,
-//       };
-// }
