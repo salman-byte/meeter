@@ -323,6 +323,23 @@ class FirestoreService {
     }
   }
 
+  Future<List<GroupModel>> getAllGroupsRelatedToCurrentUser() {
+    try {
+      if (firebaseUser == null) return Future.value([]);
+
+      return groupDataCollectionRefrence
+          .orderBy(MODIFIED_AT_FIELD_IN_GROUP_DOCUMENT, descending: true)
+          .where("members", arrayContains: firebaseUser!.uid)
+          .get()
+          .then((value) => value.docs
+              .map((e) => GroupModel.fromMap(e.data() as Map<String, dynamic>))
+              .toList());
+    } catch (e) {
+      print(e);
+      return Future.value(<GroupModel>[]);
+    }
+  }
+
   Future<List<UserData>> getAllUsersExcludingCurrentUser() {
     try {
       if (firebaseUser == null) return Future.value([]);

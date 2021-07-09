@@ -51,6 +51,10 @@ class _MeetingState extends State<Meeting> {
 
   @override
   Widget build(BuildContext context) {
+    nameText.text =
+        Provider.of<AuthStatusNotifier>(context).currentUser?.displayName ??
+            'anonymous';
+
     double height = context.safePercentHeight * 100;
     return MaterialApp(
       home: Scaffold(
@@ -163,7 +167,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
 
   @override
   Widget build(BuildContext context) {
-    // _authStatusNotifier = authNotifier;
+    _authStatusNotifier = Provider.of<AuthStatusNotifier>(context);
     return Container(
         // duration: Duration(milliseconds: 500),
         child: Row(

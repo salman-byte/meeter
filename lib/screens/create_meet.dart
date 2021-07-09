@@ -51,7 +51,7 @@ class _CreateMeetState extends State<CreateMeet> {
   void initState() {
     getListOfUsers();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    FirestoreService.instance.getAllGroups().then((value) {
+    FirestoreService.instance.getAllGroupsRelatedToCurrentUser().then((value) {
       setState(() {
         allAvailableGroups = value;
       });
@@ -164,14 +164,17 @@ class _CreateMeetState extends State<CreateMeet> {
                   CustomButton(
                     text: 'add meeting',
                     autoSize: true,
-                    onPressed: () async {
-                      final CalendarEventModel? event = await showDialog(
-                          context: context,
-                          builder: (context) => const CreateEventDialog());
-                      if (event != null) {
-                        showEventDataOnScreen(event);
-                      }
-                    },
+                    onPressed: !isStep1Complete
+                        ? null
+                        : () async {
+                            final CalendarEventModel? event = await showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const CreateEventDialog());
+                            if (event != null) {
+                              showEventDataOnScreen(event);
+                            }
+                          },
                   ),
                 ],
               ),
@@ -279,12 +282,12 @@ class _CreateMeetState extends State<CreateMeet> {
     isStep1Complete = false;
     isStep2Complete = false;
     isCreateNewGroupChecked = false;
-    allAvailableGroups = [];
+
     selectedGroup = null;
     _messageModel = null;
     _event = null;
     list = [];
-    suggestionsList = [];
+
     selectedList = [];
     groupName = 'unnamed';
     group = GroupModel(modifiedAt: Timestamp.now(), createdAt: Timestamp.now());

@@ -692,7 +692,7 @@ class ChatGroupList extends StatelessWidget {
   SizedBox buildTrailingWidget(AsyncSnapshot<List<GroupModel>> snapshot,
       int index, String currentSelectedChatId) {
     if ((snapshot.data![index].id != currentSelectedChatId) &&
-        snapshot.data?[index].recentMessage == null) {
+        snapshot.data?[index].recentMessage?.messageText == null) {
       return SizedBox.shrink(
         child: Icon(
           Icons.fiber_new,
