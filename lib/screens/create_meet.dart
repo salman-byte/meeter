@@ -450,7 +450,7 @@ class _CreateMeetState extends State<CreateMeet> {
         'meeter-app-17608.web.app/meet?id=${selectedGroup?.id ?? newGroupId}&sub=${event.name.replaceAll(' ', '+')}';
     await FirestoreService.instance.createMessageDoc(
         _messageModel!, selectedGroup?.id ?? newGroupId,
-        isNewGroup: true);
+        isNewGroup: selectedGroup == null);
     await FirestoreService.instance.createEventDoc(EventModel(
         eventBegin: event.begin.millisecondsSinceEpoch,
         eventEnd: event.end.millisecondsSinceEpoch,
