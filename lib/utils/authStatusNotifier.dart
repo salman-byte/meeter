@@ -6,6 +6,15 @@ import 'package:meeter/services/firestoreService.dart';
 
 enum AuthenticationStatus { SIGNEDIN, SIGNEDOUT }
 
+///
+/// it extends [ChangeNotifier] class is used to listen and maintain which group is selected by user
+///
+/// uses [AuthenticationStatus] enum to set `SignedIn` and `SignedOut` status,
+///
+/// [setCurrentUser] takes a Uid and notifies listeners about the current logged in user
+///
+/// [setCurrentSelectedChatViaGroupId] takes a group id String and notifies listeners about the new selected group
+///
 class AuthStatusNotifier extends ChangeNotifier {
   AuthenticationStatus? _currentStatus = AuthenticationStatus.SIGNEDOUT;
   UserData? _currentLoggedInUser;
@@ -23,6 +32,7 @@ class AuthStatusNotifier extends ChangeNotifier {
     });
   }
 
+  /// the method used to set the current loggedIn user in [AuthStatusNotifier], which will be available across the app life cycle.
   setCurrentUser({required String uid}) async {
     await FirestoreService.instance
         .getCurrentUserDocData(uid: uid)
@@ -34,6 +44,7 @@ class AuthStatusNotifier extends ChangeNotifier {
     });
   }
 
+  /// the getter method to get the current Logged in user
   UserData? get currentUser => _currentLoggedInUser;
 
   void changeAuthStatus({AuthenticationStatus? newStatus}) {
@@ -42,8 +53,11 @@ class AuthStatusNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// the getter to know the authentication status of user
   bool get isUserAuthenticated =>
       _currentStatus == AuthenticationStatus.SIGNEDIN ? true : false;
+
+  /// can be used in the need for rebuilding the widget which is listening to [AuthStatusNotifier]
 
   rebuildRoot() {
     notifyListeners();

@@ -10,6 +10,10 @@ import 'package:meeter/models/messageModel.dart';
 import 'package:meeter/models/userModel.dart';
 import 'package:meeter/services/firebaseStorageService.dart';
 
+/// custom class that holds all the fireStore queries required across the app
+///
+/// its a singleton which holds firebase user as a property inside.
+///
 class FirestoreService {
   FirestoreService._privateConstructor() {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {

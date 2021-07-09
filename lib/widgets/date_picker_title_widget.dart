@@ -3,6 +3,11 @@ import '../res/colors.dart';
 import '../utils/constants.dart';
 import '../utils/extensions.dart';
 
+///
+///returns the Date in month and year format, i.e. MMMM yyyy
+///
+/// used inside create event dialog to show the picked date
+///
 class DatePickerTitle extends StatelessWidget {
   const DatePickerTitle({
     required this.date,

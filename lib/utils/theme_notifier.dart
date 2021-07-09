@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+///
+/// it extends [ChangeNotifier] class.it is used to listen and maintain constant theme across the app
+///
+/// [themeMode] method is to store and use custom colors that are not there in ThemeData
+///
+/// [themeData] method is to store and use colors that are there in ThemeData
+///
 class ThemeProvider with ChangeNotifier {
   bool isLightTheme;
 
   ThemeProvider({required this.isLightTheme});
 
-  // the code below is to manage the status bar color when the theme changes
+  /// the code below is to manage the status bar color when the theme changes
   getCurrentStatusNavigationBarColor() {
     if (isLightTheme) {
       SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -28,7 +35,7 @@ class ThemeProvider with ChangeNotifier {
     }
   }
 
-  // use to toggle the theme
+  /// use to toggle the theme
   toggleThemeData(bool switchState) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isLightTheme', !switchState);
@@ -37,7 +44,7 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Global theme data we are always check if the light theme is enabled #isLightTheme
+  /// Global theme data we are always check if the light theme is enabled #isLightTheme
   ThemeData themeData() {
     return ThemeData(
       visualDensity: VisualDensity.adaptivePlatformDensity,

@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// Creates a [RaisedButton]` widget and can be used accross the app to maintain constant design pattern.
+///
+/// required input is `text` that gets displayed on the button.
+///
+/// optional parameters are `onPressed`, `buttonColor`, `autoSize` and `textColor`
+///
+/// if `autoSize` is `null` or `false` then the width of the button is as large as its parent, but if `autoSize` is `true` then its width shrinks to its child.
+///
 class CustomButton extends StatelessWidget {
   final Color? textColor;
   final Color? buttonColor;

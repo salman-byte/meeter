@@ -3,6 +3,30 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Creates a [TextFormField] widget and can be used accross the app to maintain constant design pattern.
+///
+/// has no required parameters.
+///
+/// optional parameters are:
+///
+/// `controller` - can be null but inorder to controll input the [TextEditingController] can be passed.
+///
+/// `prefixText` - the text shows up when user starts typing,
+///
+///  `hintText` - shown inside of blank input field and as the user starts typing it disappears ,
+///
+///  `labelText` - shown inside of blank input field and as the user starts typing it goes on the top of text field,
+///
+///  `initialValue` - the text which should be auto filled for user, if text editing controller is passed then this should be null,
+///
+///  `multiLines` - if you want to make field expand when user input large text make it true,
+///
+///  `maxLines` - to limit the maximum lines for input when `multiLines` is true,
+///
+///  `maxLength`  - takes integer value and limits the input up to that character.
+///
+/// the width of the text field is as large as its parent.
+///
 class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final void Function(String?)? onSaved;

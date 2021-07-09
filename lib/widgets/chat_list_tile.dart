@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// Creates a `ListTile` widget and can be used to show a tile for either a user or group details.
+///
+///required inputs are `title`, `subTitle` and `avatorUrl` (avatorUrl is of no use currently).
+///
+///optional parameters are `trailingWidget`, `isSelected` and `selectedTileColor`
+///
+///defaults: Leading Widget is hardcoded with an icon i.e. `Icons.people`.
+///
 class ChatListTile extends StatelessWidget {
   final String title;
   final String subTitle;
@@ -38,10 +46,6 @@ class ChatListTile extends StatelessWidget {
         ),
       ),
       trailing: Padding(padding: EdgeInsets.all(8.0), child: trailingWidget),
-      // trailing: Align(
-      //   alignment: Alignment.topRight,
-      //   child: trailingWidget ?? Container(),
-      // ),
     );
   }
 }

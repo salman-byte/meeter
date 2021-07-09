@@ -12,6 +12,9 @@ import 'picker_day_item_widget.dart';
 import 'week_days_widget.dart';
 
 /// Pop up dialog for event creation.
+/// it extends [StatefulWidget] and is used to show `popup` for entering event details.
+///
+/// it also uses multiple widgets in steps.
 class CreateEventDialog extends StatefulWidget {
   const CreateEventDialog({Key? key}) : super(key: key);
 

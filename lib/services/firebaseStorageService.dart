@@ -5,6 +5,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 
+///custom class with singleton pattern implementation
+///
+///its [uploadDocumentAndGetUrl] method is used to upload document in the [FirebaseStorage] and returns the download url as String
+///
+///its [uploadImageAndGetUrl] method is used to upload Image in the [FirebaseStorage] and returns the download url as String
+
 class FirebaseStorageService {
   FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
 
