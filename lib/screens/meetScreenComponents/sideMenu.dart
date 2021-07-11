@@ -57,7 +57,6 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
     return Consumer<AppStateNotifier>(
       builder: (context, appstate, child) {
         groupId = appstate.getCurrentSelectedChat?.id ?? groupId;
-        print('groupId in build method is: $groupId');
         return Container(
             // duration: Duration(milliseconds: 500),
             child: Row(

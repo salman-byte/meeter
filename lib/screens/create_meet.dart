@@ -398,9 +398,7 @@ class _CreateMeetState extends State<CreateMeet> {
                               if (!selectedList.contains(element))
                                 selectedList.add(element);
                               // suggestionsList.remove(suggestionsList[index]);
-                            } catch (e) {
-                              print(e);
-                            }
+                            } catch (e) {}
                             setState(() {});
                           },
                           title: Text(element.displayName!),
@@ -421,11 +419,9 @@ class _CreateMeetState extends State<CreateMeet> {
 
   Future createGroup() async {
     if (_firestoreService.firebaseUser == null) {
-      print('user not registered');
       return;
     }
     if (selectedList.length == 0) {
-      print('no member selected');
       return;
     }
     group.name = groupName;
@@ -434,8 +430,6 @@ class _CreateMeetState extends State<CreateMeet> {
         (previousValue, element) => [...previousValue!, element.uid!]);
     group.type = selectedList.length > 2 ? 1 : 2;
     group.id = newGroupId;
-    print('selected members');
-    print(group.members);
 
     await _firestoreService.createGroupDoc(group);
 

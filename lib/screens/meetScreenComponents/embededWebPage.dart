@@ -17,9 +17,7 @@ class WebViewForMeetIntegration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WebViewX(
-      onWebResourceError: (error) {
-        print(error.toString());
-      },
+      onWebResourceError: (error) {},
       initialContent: """
       <!DOCTYPE html>
       <body style="margin: 0;">

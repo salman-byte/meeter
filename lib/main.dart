@@ -20,8 +20,6 @@ Future<void> main() async {
 
   bool isLightTheme = prefs.getBool('isLightTheme') ?? false;
 
-  print(isLightTheme);
-
   runApp(ChangeNotifierProvider(
     create: (_) => ThemeProvider(isLightTheme: isLightTheme),
     child: AppStart(),
@@ -72,18 +70,6 @@ class _MyAppState extends State<MyApp> {
       '/forgot-password': (uri, params) =>
           MaterialPage(child: ForgotPassword()),
       '/confirm-email': (uri, params) => MaterialPage(child: ConfirmEmail()),
-      // '/': (uri, params) => MaterialPage(child: ConfirmEmail()),
-      // '/': (uri, params) => MaterialPage(
-      //         child: Meeting(
-      //       id: '7a8a1896-6e1f-4368-8e6d-edeca0988cb2',
-      //       subject: uri.queryParameters['sub'] ?? 'subject',
-
-      //       //   'id': '7a8a1896-6e1f-4368-8e6d-edeca0988cb2',
-      //       //   'am': true,
-      //       //   'ao': true,
-      //       //   'vm': true,
-      //       //   'sub': 'subject',
-      //     )),
       '/schedule': (uri, params) => MaterialPage(child: EventPage()),
       '/signup': (uri, params) => MaterialPage(
               child: SignInSignUpFlow(

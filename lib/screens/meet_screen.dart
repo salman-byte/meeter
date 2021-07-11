@@ -27,8 +27,6 @@ class _MeetingState extends State<Meeting> {
   @override
   void initState() {
     super.initState();
-    print('**********************id: ' + widget.id);
-    print('**********************subject: ' + widget.subject);
     intializeUserData();
   }
 
@@ -40,9 +38,7 @@ class _MeetingState extends State<Meeting> {
     if (firebaseUser != null)
       await FirestoreService.instance
           .getCurrentUserDocData(uid: firebaseUser!.uid)
-          .then((value) {
-        print('display is: ${value?.displayName}');
-      });
+          .then((value) {});
   }
 
   @override

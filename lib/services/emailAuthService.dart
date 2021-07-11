@@ -30,14 +30,9 @@ class EmailAuth {
       ));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
-      }
+      } else if (e.code == 'email-already-in-use') {}
       return e.code;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
   ///used to signIn an existing user. it returns exception message if any.
@@ -48,10 +43,7 @@ class EmailAuth {
           .signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
+      } else if (e.code == 'wrong-password') {}
       return e.code;
     }
   }

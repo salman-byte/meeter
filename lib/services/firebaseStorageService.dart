@@ -32,7 +32,6 @@ class FirebaseStorageService {
           .then((TaskSnapshot snapshot) => snapshot.ref.getDownloadURL());
       return url;
     } catch (e) {
-      print(e);
       return "";
     }
   }
@@ -48,7 +47,6 @@ class FirebaseStorageService {
           .then((TaskSnapshot snapshot) => snapshot.ref.getDownloadURL());
       return url;
     } catch (e) {
-      print(e);
       return "";
     }
   }

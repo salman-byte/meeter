@@ -28,14 +28,11 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
       VxNavigator.of(context).push(Uri.parse(ConfirmEmail.id));
     } on FirebaseException catch (e) {
-      print(e);
-
       setState(() {
         errorMsg = e.message.toString();
         isErrorOccured = true;
       });
     } catch (e) {
-      print(e);
       setState(() {
         errorMsg = e.toString();
         isErrorOccured = true;
@@ -103,7 +100,6 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         if (_formKey.currentState!.validate()) {
                           _passwordReset();
                         }
-                        print(emailInputController.text);
                       },
                     ),
                     SizedBox(height: 10),

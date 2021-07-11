@@ -35,8 +35,6 @@ class _SignInSignUpFlowState extends State<SignInSignUpFlow> {
 
   Future _loginUser() async {
     errorMsg = null;
-    print(usernameInputController.text);
-    print(passwordInputController.text);
     errorMsg = await EmailAuth().signInWithEmailAndPassword(
         email: usernameInputController.text,
         password: passwordInputController.text);

@@ -42,9 +42,7 @@ class FirestoreService {
   Future createUserDoc(UserData userData) async {
     try {
       await userDataCollectionRefrence.doc(userData.uid).set(userData.toMap());
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //create Group document in database
@@ -56,9 +54,7 @@ class FirestoreService {
           .doc(groupData.id)
           .set(groupData.toMap());
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //update Group document in database for recent message
@@ -84,9 +80,7 @@ class FirestoreService {
       });
 
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //update Group document in database for marking message as read
@@ -103,9 +97,7 @@ class FirestoreService {
       });
 
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //create Message document in database
@@ -123,9 +115,7 @@ class FirestoreService {
         await updateRecentMessageInGroupDoc(groupId: groupId, message: message);
       }
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //create Notes document in database
@@ -139,9 +129,7 @@ class FirestoreService {
           .doc(firebaseUser!.uid)
           .set({'note': note});
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //create Event document in database
@@ -153,9 +141,7 @@ class FirestoreService {
           .doc()
           .set(event.toMap());
       return;
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
 //get Notes document from database
@@ -170,7 +156,6 @@ class FirestoreService {
           .get()
           .then((value) => value.data()!['note']);
     } catch (e) {
-      print(e);
       return '';
     }
   }
@@ -187,7 +172,6 @@ class FirestoreService {
         return snapshot.docs.map((e) => EventModel.fromMap(e.data())).toList();
       });
     } catch (e) {
-      print(e);
       return [];
     }
   }
@@ -206,7 +190,6 @@ class FirestoreService {
         return GroupModel.fromMap(document.data()!);
       });
     } catch (e) {
-      print(e);
       return null;
     }
   }
@@ -224,7 +207,6 @@ class FirestoreService {
               event.docs.map((e) => MessageModel.fromMap(e.data())).toList());
       // .set(message.toMap());
     } catch (e) {
-      print(e);
       return Stream.empty();
     }
   }
@@ -237,7 +219,6 @@ class FirestoreService {
   //         .snapshots()
   //         .map((event) => userDataFromMap(jsonEncode(event.data())));
   //   } catch (e) {
-  //     print(e);
   //   }
   // }
 
@@ -247,11 +228,8 @@ class FirestoreService {
           .collection(USERS_COLLECTION)
           .doc(uid)
           .get();
-      print(snap.data());
       return userDataFromMap(jsonEncode(snap.data()));
-    } catch (e) {
-      print(e);
-    }
+    } catch (e) {}
   }
 
   /// Returns a stream of all users from Firebase
@@ -292,13 +270,9 @@ class FirestoreService {
         final data = snapshot.docs.map((e) {
           return GroupModel.fromMap(e.data() as Map<String, dynamic>);
         }).toList();
-        print(data.length);
         return data;
-      }).handleError((e) {
-        print(e);
-      });
+      }).handleError((e) {});
     } catch (e) {
-      print(e);
       return Stream.empty();
     }
   }
@@ -311,7 +285,6 @@ class FirestoreService {
           .map((e) => UserData.fromMap(e.data() as Map<String, dynamic>))
           .toList());
     } catch (e) {
-      print(e);
       return Future.value(<UserData>[]);
     }
   }
@@ -324,7 +297,6 @@ class FirestoreService {
           .map((e) => GroupModel.fromMap(e.data() as Map<String, dynamic>))
           .toList());
     } catch (e) {
-      print(e);
       return Future.value(<GroupModel>[]);
     }
   }
@@ -341,7 +313,6 @@ class FirestoreService {
               .map((e) => GroupModel.fromMap(e.data() as Map<String, dynamic>))
               .toList());
     } catch (e) {
-      print(e);
       return Future.value(<GroupModel>[]);
     }
   }
@@ -357,7 +328,6 @@ class FirestoreService {
               .map((e) => UserData.fromMap(e.data() as Map<String, dynamic>))
               .toList());
     } catch (e) {
-      print(e);
       return Future.value(<UserData>[]);
     }
   }

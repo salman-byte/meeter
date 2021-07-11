@@ -41,11 +41,9 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
 
   createGroup() async {
     if (_firestoreService.firebaseUser == null) {
-      print('user not registered');
       return;
     }
     if (selectedList.length == 0) {
-      print('no member selected');
       return;
     }
     group.name = groupName;
@@ -54,8 +52,6 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
         (previousValue, element) => [...previousValue!, element.uid!]);
     group.type = selectedList.length > 2 ? 1 : 2;
     group.id = const Uuid().v4();
-    print('selected members');
-    print(group.members);
     // await _firestoreService.createGroupDoc(group);
     context.pop(group);
   }
@@ -154,9 +150,7 @@ class _PersonNameInputWidgetState extends State<PersonNameInputWidget> {
                     if (!selectedList.contains(suggestionsList[index]))
                       selectedList.add(suggestionsList[index]);
                     // suggestionsList.remove(suggestionsList[index]);
-                  } catch (e) {
-                    print(e);
-                  }
+                  } catch (e) {}
                   setState(() {});
                 },
                 title: Text(suggestionsList[index].displayName!),

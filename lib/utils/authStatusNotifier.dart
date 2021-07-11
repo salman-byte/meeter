@@ -20,13 +20,10 @@ class AuthStatusNotifier extends ChangeNotifier {
   UserData? _currentLoggedInUser;
 
   AuthStatusNotifier() {
-    // print("surrent status is $_currentStatus");
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user == null) {
-        print('User is currently signed out!');
         changeAuthStatus(newStatus: AuthenticationStatus.SIGNEDOUT);
       } else {
-        print('User is signed in!');
         setCurrentUser(uid: user.uid);
       }
     });

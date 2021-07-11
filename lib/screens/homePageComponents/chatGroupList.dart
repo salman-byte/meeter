@@ -19,7 +19,6 @@ class ChatGroupList extends StatelessWidget {
         builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
           if (!snapshot.hasData) return LinearProgressIndicator();
           if (snapshot.hasError) {
-            print(snapshot.error);
             return Text(snapshot.error.toString());
           }
           return Consumer<AppStateNotifier>(
@@ -34,7 +33,6 @@ class ChatGroupList extends StatelessWidget {
                       final recentMessage =
                           snapshot.data?[index].recentMessage?.messageText ??
                               '';
-                      print(currentSelectedChatId);
                       // return Container();
                       return ChatListTile(
                           selectedTileColor:

@@ -36,7 +36,6 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
 
   @override
   void didUpdateWidget(covariant ChatViewWithHeader oldWidget) {
-    print('groupid: ${widget.group.id!}');
     FirestoreService.instance.getNoteDoc(widget.group.id!).then((value) {
       setState(() {
         noteText = value;
@@ -64,7 +63,6 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
                 switch (value) {
                   case 1:
                     buildShowAnimatedMeetingDialog(context, widget.group.id!);
-                    print('pushing route');
                     break;
                   case 2:
                     final CalendarEventModel? event = await showDialog(
