@@ -46,24 +46,23 @@ class _MyHomePageState extends State<MyHomePage> {
     return AppBar(
       title: Text(widget.title!),
       actions: [
-        Switch.adaptive(
-          value: themeProvider!.isLightTheme ? false : true,
-          onChanged: (value) {
-            themeProvider!.toggleThemeData(value);
-          },
-        ),
-        SizedBox(width: 10),
+        IconButton(
+            icon: themeProvider!.isLightTheme
+                ? Icon(Icons.nightlight_round)
+                : Icon(Icons.lightbulb_outline_rounded),
+            onPressed: () {
+              themeProvider!.toggleThemeData();
+            }),
+        // Switch.adaptive(
+        //   value: themeProvider!.isLightTheme ? false : true,
+        //   // onChanged: (value) {
+        //   //   themeProvider!.toggleThemeData(value);
+        //   // },
+        // ),
+        SizedBox(width: 20),
         Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
           return !(authData.isUserAuthenticated)
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(20.0), //or 15.0
-                  child: Container(
-                    // height: 70.0,
-                    // width: 70.0,
-                    color: Color(0xffFF0E58),
-                    child: Icon(Icons.person, color: Colors.white, size: 50.0),
-                  ),
-                )
+              ? Container()
               : PopupMenuButton(
                   onSelected: (value) {
                     switch (value) {
@@ -78,23 +77,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20.0), //or 15.0
                     child: Container(
-                      // height: 70.0,
-                      // width: 70.0,
-                      color: Color(0xffFF0E58),
-                      child:
-                          Icon(Icons.person, color: Colors.white, size: 50.0),
+                      child: Icon(Icons.exit_to_app),
                     ),
                   ),
                   itemBuilder: (context) {
                     return <PopupMenuItem>[
-                      // PopupMenuItem(
-                      //   value: 0,
-                      //   child: Text('settings'),
-                      // ),
-                      // PopupMenuItem(
-                      //   value: 1,
-                      //   child: Text('invite'),
-                      // ),
                       PopupMenuItem(
                         value: 2,
                         child: Text('logout'),
@@ -103,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 );
         }),
+        SizedBox(width: 20),
       ],
     );
   }

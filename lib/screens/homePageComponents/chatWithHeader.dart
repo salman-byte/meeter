@@ -57,7 +57,10 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
-                child: Text(widget.group.name!),
+                child: Text(
+                  widget.group.name!,
+                  style: Theme.of(context).textTheme.headline5,
+                ),
               ),
               PopupMenuButton(onSelected: (value) async {
                 switch (value) {

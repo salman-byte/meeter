@@ -36,10 +36,10 @@ class ThemeProvider with ChangeNotifier {
   }
 
   /// use to toggle the theme
-  toggleThemeData(bool switchState) async {
+  toggleThemeData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('isLightTheme', !switchState);
-    isLightTheme = !switchState;
+    prefs.setBool('isLightTheme', !isLightTheme);
+    isLightTheme = !isLightTheme;
     getCurrentStatusNavigationBarColor();
     notifyListeners();
   }

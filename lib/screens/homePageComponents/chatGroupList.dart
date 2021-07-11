@@ -47,8 +47,8 @@ class ChatGroupList extends StatelessWidget {
                                     groupId: snapshot.data![index].id!);
                           },
                           title: snapshot.data![index].name!,
-                          subTitle: recentMessage.length > 15
-                              ? recentMessage.substring(1, 15)
+                          subTitle: recentMessage.length > 25
+                              ? recentMessage.substring(0, 25) + '...'
                               : recentMessage,
                           avatorUrl: '',
                           trailingWidget: buildTrailingWidget(

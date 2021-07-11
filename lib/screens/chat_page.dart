@@ -96,6 +96,9 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleAtachmentPressed() {
     attachmentBoxOpen.value = !attachmentBoxOpen.value;
+    setState(() {
+      isAttachmentLoading = false;
+    });
   }
 
   void _handleFileSelection() async {
@@ -118,9 +121,7 @@ class _ChatPageState extends State<ChatPage> {
         size: result.files.single.size,
         uri: uri,
       );
-      setState(() {
-        isAttachmentLoading = false;
-      });
+      _handleAtachmentPressed();
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -150,9 +151,7 @@ class _ChatPageState extends State<ChatPage> {
         uri: uri,
         width: image.width.toDouble(),
       );
-      setState(() {
-        isAttachmentLoading = false;
-      });
+      _handleAtachmentPressed();
       _addMessage(message);
     } else {
       // User canceled the picker
