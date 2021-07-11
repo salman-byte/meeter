@@ -9,12 +9,14 @@ import 'package:meeter/screens/chatPageComponents.dart/attachmentBox.dart';
 import 'package:meeter/services/firebaseStorageService.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
+import 'package:meeter/utils/authStatusNotifier.dart';
 import 'package:meeter/utils/theme_notifier.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_chat_types/src/user.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -30,7 +32,7 @@ class _ChatPageState extends State<ChatPage> {
   String? currentGroupId;
   ThemeProvider? _themeProvider;
   AppStateNotifier? appStateNotifier;
-  final _user = types.User(id: FirestoreService.instance.firebaseUser!.uid);
+  User? _user;
   Stream<List<MessageModel>>? _messageStream;
 
   @override
@@ -38,16 +40,40 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     appStateNotifier = Provider.of<AppStateNotifier>(context, listen: false);
+    _user = types.User(
+        id: FirestoreService.instance.firebaseUser!.uid,
+        firstName: Provider.of<AuthStatusNotifier>(context, listen: false)
+            .currentUser
+            ?.displayName);
+
     currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
 
     initializeChats();
   }
 
+  User configureUser() {
+    _user = types.User(
+        id: FirestoreService.instance.firebaseUser!.uid,
+        firstName: Provider.of<AuthStatusNotifier>(context, listen: false)
+            .currentUser
+            ?.displayName);
+    return _user ??
+        types.User(
+            id: FirestoreService.instance.firebaseUser!.uid,
+            firstName: Provider.of<AuthStatusNotifier>(context, listen: false)
+                .currentUser
+                ?.displayName);
+  }
+
   initializeChats() {
     currentGroupId = appStateNotifier?.getCurrentSelectedChat?.id;
-    print('groupid: $currentGroupId');
     _messageStream = FirestoreService.instance.getMessagesAsStreamFromDataBase(
         appStateNotifier!.getCurrentSelectedChat!.id!);
+    _user = types.User(
+        id: FirestoreService.instance.firebaseUser!.uid,
+        firstName: Provider.of<AuthStatusNotifier>(context, listen: false)
+            .currentUser
+            ?.displayName);
     _loadMessages();
   }
 
@@ -59,10 +85,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _addMessage(types.Message message) {
-    // print(message.toJson());
     MessageModel newMessage =
         MessageModel.fromJson(jsonEncode(message.toJson()));
-    print(newMessage.toMap());
     FirestoreService.instance.createMessageDoc(
         newMessage, appStateNotifier!.getCurrentSelectedChat!.id!);
     setState(() {
@@ -72,62 +96,6 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleAtachmentPressed() {
     attachmentBoxOpen.value = !attachmentBoxOpen.value;
-    // showModalBottomSheet(
-    //     shape: const RoundedRectangleBorder(
-    //         borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
-    //     context: context,
-    //     builder: (context) => SizedBox.fromSize(
-    //           child: Row(
-    //               mainAxisSize: MainAxisSize.max,
-    //               mainAxisAlignment: MainAxisAlignment.start,
-    //               children: [
-    //                 iconCreation(
-    //                   text: 'Photo',
-    //                   icons: Icons.image_outlined,
-    //                   onTap: () {
-    //                     context.pop();
-    //                     _handleImageSelection();
-    //                   },
-    //                 ),
-    //                 iconCreation(
-    //                     onTap: () {
-    //                       context.pop();
-    //                       _handleFileSelection();
-    //                     },
-    //                     text: 'File',
-    //                     icons: Icons.attach_file),
-    //               ]),
-    //         ));
-  }
-
-  Widget iconCreation(
-      {required IconData icons, required String text, void Function()? onTap}) {
-    return GestureDetector(
-      onTap: onTap ?? () {},
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              radius: 30,
-              // backgroundColor: color,
-              child: Icon(
-                icons,
-                // semanticLabel: "Help",
-                size: 29,
-              ),
-            ),
-            SizedBox(
-              height: 5,
-            ),
-            Text(
-              text,
-            )
-          ],
-        ),
-      ),
-    );
   }
 
   void _handleFileSelection() async {
@@ -142,7 +110,7 @@ class _ChatPageState extends State<ChatPage> {
       final uri = await FirebaseStorageService.instance.uploadDocumentAndGetUrl(
           docName: result.files.single.name, data: result.files.single.bytes!);
       final message = types.FileMessage(
-        author: _user,
+        author: _user ?? configureUser(),
         createdAt: DateTime.now().millisecondsSinceEpoch,
         name: result.files.single.name,
         id: const Uuid().v4(),
@@ -173,7 +141,7 @@ class _ChatPageState extends State<ChatPage> {
       final uri = await FirebaseStorageService.instance
           .uploadImageAndGetUrl(imgName: name, data: bytes);
       final message = types.ImageMessage(
-        author: _user,
+        author: _user ?? configureUser(),
         createdAt: DateTime.now().millisecondsSinceEpoch,
         height: image.height.toDouble(),
         id: const Uuid().v4(),
@@ -182,8 +150,6 @@ class _ChatPageState extends State<ChatPage> {
         uri: uri,
         width: image.width.toDouble(),
       );
-      print(message.uri);
-      print(result.path);
       setState(() {
         isAttachmentLoading = false;
       });
@@ -215,7 +181,7 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleSendPressed(types.PartialText message) {
     final textMessage = types.TextMessage(
-      author: _user,
+      author: _user ?? configureUser(),
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
       text: message.text,
@@ -255,7 +221,8 @@ class _ChatPageState extends State<ChatPage> {
               onMessageTap: _handleMessageTap,
               onPreviewDataFetched: _handlePreviewDataFetched,
               onSendPressed: _handleSendPressed,
-              user: _user,
+              user: _user ?? configureUser(),
+              showUserNames: true,
             ),
           ),
           AttachmentBox(
