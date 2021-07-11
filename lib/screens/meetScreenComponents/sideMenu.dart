@@ -25,7 +25,6 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
   bool showNotesBox = false;
   TextEditingController noteController = TextEditingController();
   AuthStatusNotifier? _authStatusNotifier;
-  String? noteText;
   String? groupId;
   @override
   void initState() {
@@ -41,7 +40,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
     if (groupId != null)
       FirestoreService.instance.getNoteDoc(groupId!).then((value) {
         setState(() {
-          noteText = value;
+          noteController.text = value;
         });
       });
   }
@@ -93,6 +92,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                             onPressed: () {
                               updateNote();
                               setState(() {
+                                showChatBox = false;
                                 showNotesBox = !showNotesBox;
                               });
                             },
@@ -108,6 +108,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                 onPressed: () {
                                   updateNote();
                                   setState(() {
+                                    showChatBox = false;
                                     showNotesBox = !showNotesBox;
                                   });
                                 },
@@ -127,6 +128,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                 : Icon(Icons.close),
                             onPressed: () {
                               setState(() {
+                                showNotesBox = false;
                                 showChatBox = !showChatBox;
                               });
                             },
@@ -141,6 +143,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                     : Icon(Icons.expand_more),
                                 onPressed: () {
                                   setState(() {
+                                    showNotesBox = false;
                                     showChatBox = !showChatBox;
                                   });
                                 },
@@ -168,9 +171,9 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(
                                     children: [
-                                      noteText != null
-                                          ? Text(noteText!)
-                                          : Container(),
+                                      // noteText != null
+                                      //     ? Text(noteText!)
+                                      //     : Container(),
                                       TextField(
                                         keyboardType: TextInputType.multiline,
                                         maxLines: null,
@@ -199,27 +202,21 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                             : () {
                                                 FirestoreService.instance
                                                     .createNoteDoc(
-                                                        noteText ??
-                                                            '' +
-                                                                noteController
-                                                                    .text,
-                                                        groupId!)
-                                                    .then((value) =>
-                                                        noteController.text =
-                                                            '');
+                                                        noteController.text,
+                                                        groupId!);
                                               },
                                       ),
                                     )
                                   : Container(),
                               (FirestoreService.instance.firebaseUser == null ||
                                       groupId == null)
-                                  ? Flexible(
-                                      child: Padding(
+                                  ? Wrap(children: [
+                                      Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
                                             'join the meet from group chat in order to save notes for later.'),
                                       ),
-                                    )
+                                    ])
                                   : Container(),
                             ])),
             ),

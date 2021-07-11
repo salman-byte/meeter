@@ -5,6 +5,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meeter/models/messageModel.dart';
+import 'package:meeter/screens/chatPageComponents.dart/attachmentBox.dart';
 import 'package:meeter/services/firebaseStorageService.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
@@ -12,8 +13,8 @@ import 'package:meeter/utils/theme_notifier.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
+import 'package:velocity_x/velocity_x.dart';
 import 'package:uuid/uuid.dart';
-import 'chatPageComponents.dart/attachmentBox.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -24,8 +25,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
-  ValueNotifier<bool> attachmentBoxOpen = ValueNotifier<bool>(false);
   bool isAttachmentLoading = false;
+  ValueNotifier<bool> attachmentBoxOpen = ValueNotifier<bool>(false);
   String? currentGroupId;
   ThemeProvider? _themeProvider;
   AppStateNotifier? appStateNotifier;
@@ -71,9 +72,62 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleAtachmentPressed() {
     attachmentBoxOpen.value = !attachmentBoxOpen.value;
-    setState(() {
-      isAttachmentLoading = isAttachmentLoading ? !isAttachmentLoading : false;
-    });
+    // showModalBottomSheet(
+    //     shape: const RoundedRectangleBorder(
+    //         borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
+    //     context: context,
+    //     builder: (context) => SizedBox.fromSize(
+    //           child: Row(
+    //               mainAxisSize: MainAxisSize.max,
+    //               mainAxisAlignment: MainAxisAlignment.start,
+    //               children: [
+    //                 iconCreation(
+    //                   text: 'Photo',
+    //                   icons: Icons.image_outlined,
+    //                   onTap: () {
+    //                     context.pop();
+    //                     _handleImageSelection();
+    //                   },
+    //                 ),
+    //                 iconCreation(
+    //                     onTap: () {
+    //                       context.pop();
+    //                       _handleFileSelection();
+    //                     },
+    //                     text: 'File',
+    //                     icons: Icons.attach_file),
+    //               ]),
+    //         ));
+  }
+
+  Widget iconCreation(
+      {required IconData icons, required String text, void Function()? onTap}) {
+    return GestureDetector(
+      onTap: onTap ?? () {},
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              // backgroundColor: color,
+              child: Icon(
+                icons,
+                // semanticLabel: "Help",
+                size: 29,
+              ),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text(
+              text,
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   void _handleFileSelection() async {
@@ -96,7 +150,9 @@ class _ChatPageState extends State<ChatPage> {
         size: result.files.single.size,
         uri: uri,
       );
-      _handleAtachmentPressed();
+      setState(() {
+        isAttachmentLoading = false;
+      });
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -128,7 +184,9 @@ class _ChatPageState extends State<ChatPage> {
       );
       print(message.uri);
       print(result.path);
-      _handleAtachmentPressed();
+      setState(() {
+        isAttachmentLoading = false;
+      });
       _addMessage(message);
     } else {
       // User canceled the picker
@@ -185,26 +243,27 @@ class _ChatPageState extends State<ChatPage> {
         appStateNotifier = appstate;
         initializeChats();
       }
-      return Column(children: [
-        Expanded(
-          child: new Chat(
-            theme:
-                DefaultChatTheme(backgroundColor: currentTheme.backgroundColor),
-            isAttachmentUploading: isAttachmentLoading,
-            messages: _messages,
-            onAttachmentPressed: _handleAtachmentPressed,
-            onMessageTap: _handleMessageTap,
-            onPreviewDataFetched: _handlePreviewDataFetched,
-            onSendPressed: _handleSendPressed,
-            user: _user,
+      return Scaffold(
+        body: Column(children: [
+          Expanded(
+            child: new Chat(
+              theme: DefaultChatTheme(
+                  backgroundColor: currentTheme.backgroundColor),
+              isAttachmentUploading: isAttachmentLoading,
+              messages: _messages,
+              onAttachmentPressed: _handleAtachmentPressed,
+              onMessageTap: _handleMessageTap,
+              onPreviewDataFetched: _handlePreviewDataFetched,
+              onSendPressed: _handleSendPressed,
+              user: _user,
+            ),
           ),
-        ),
-        AttachmentBox(
-          attachmentBoxOpen: attachmentBoxOpen,
-          handleFileSelection: _handleFileSelection,
-          handleImageSelection: _handleImageSelection,
-        ),
-      ]);
+          AttachmentBox(
+              attachmentBoxOpen: attachmentBoxOpen,
+              handleImageSelection: _handleImageSelection,
+              handleFileSelection: _handleFileSelection),
+        ]),
+      );
     });
   }
 }

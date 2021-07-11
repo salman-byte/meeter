@@ -24,25 +24,21 @@ class AttachmentBox extends StatelessWidget {
             duration: Duration(milliseconds: 500),
             child: !attachmentBoxOpen
                 ? Container()
-                : Wrap(
-                    runSpacing: 5,
-                    spacing: 5,
-                    alignment: WrapAlignment.start,
-                    children: [
-                        iconCreation(
-                          text: 'Photo',
-                          icons: Icons.image_outlined,
-                          onTap: () {
-                            handleImageSelection();
-                          },
-                        ),
-                        iconCreation(
-                            onTap: () {
-                              handleFileSelection();
-                            },
-                            text: 'File',
-                            icons: Icons.attach_file),
-                      ]),
+                : Wrap(spacing: 5, runSpacing: 5, children: [
+                    iconCreation(
+                      text: 'Photo',
+                      icons: Icons.image_outlined,
+                      onTap: () {
+                        handleImageSelection();
+                      },
+                    ),
+                    iconCreation(
+                        onTap: () {
+                          handleFileSelection();
+                        },
+                        text: 'File',
+                        icons: Icons.attach_file),
+                  ]),
           ),
         );
       },
@@ -54,24 +50,28 @@ class AttachmentBox extends StatelessWidget {
       {required IconData icons, required String text, void Function()? onTap}) {
     return GestureDetector(
       onTap: onTap ?? () {},
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            // backgroundColor: color,
-            child: Icon(
-              icons,
-              // semanticLabel: "Help",
-              size: 29,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              // backgroundColor: color,
+              child: Icon(
+                icons,
+                // semanticLabel: "Help",
+                size: 29,
+              ),
             ),
-          ),
-          SizedBox(
-            height: 5,
-          ),
-          Text(
-            text,
-          )
-        ],
+            SizedBox(
+              height: 5,
+            ),
+            Text(
+              text,
+            )
+          ],
+        ),
       ),
     );
   }

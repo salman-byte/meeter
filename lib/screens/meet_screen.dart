@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
+import 'package:meeter/utils/authStatusNotifier.dart';
 import 'package:provider/provider.dart';
 import 'package:velocity_x/velocity_x.dart';
 
@@ -19,8 +20,7 @@ class Meeting extends StatefulWidget {
 }
 
 class _MeetingState extends State<Meeting> {
-  final nameText = TextEditingController();
-  User? firebaseUser = FirestoreService.instance.firebaseUser;
+  User? firebaseUser;
 
   bool kIsWeb = true;
 
@@ -29,23 +29,19 @@ class _MeetingState extends State<Meeting> {
     super.initState();
     print('**********************id: ' + widget.id);
     print('**********************subject: ' + widget.subject);
-    Provider.of<AppStateNotifier>(context, listen: false)
-        .setCurrentSelectedChatViaGroupId = widget.id;
     intializeUserData();
   }
 
   intializeUserData() async {
-    String name = 'anonymous';
-    print('name is: $name');
-    nameText.text = name;
+    firebaseUser = FirestoreService.instance.firebaseUser;
+    Provider.of<AppStateNotifier>(context, listen: false)
+        .setCurrentSelectedChatViaGroupId = widget.id;
+
     if (firebaseUser != null)
       await FirestoreService.instance
           .getCurrentUserDocData(uid: firebaseUser!.uid)
           .then((value) {
         print('display is: ${value?.displayName}');
-        setState(() {
-          nameText.text = value?.displayName ?? 'anonymous';
-        });
       });
   }
 
@@ -60,13 +56,15 @@ class _MeetingState extends State<Meeting> {
     // nameText.text =
     //     Provider.of<AuthStatusNotifier>(context).currentUser?.displayName ??
     //         'anonymous';
-    print('name in build method is: ${nameText.text}');
 
     double height = context.safePercentHeight * 100;
-    return MaterialApp(
-      home: Scaffold(
-        body: Consumer<AppStateNotifier>(
-          builder: (context, appstate, child) => Container(
+    return Scaffold(
+      body: Consumer<AuthStatusNotifier>(
+        builder: (context, authStatus, child) {
+          if (authStatus.isUserAuthenticated && firebaseUser == null) {
+            intializeUserData();
+          }
+          return Container(
               child: VxDevice(
             mobile: Expanded(child: Container()
                 // child: JitsiMeetConferencing(
@@ -81,13 +79,11 @@ class _MeetingState extends State<Meeting> {
               ChatScreenSideMenu(),
               Flexible(
                 child: WebViewForMeetIntegration(
-                    subject: widget.subject,
-                    nameText: nameText,
-                    height: height),
+                    subject: widget.subject, height: height),
               ),
             ]),
-          )),
-        ),
+          ));
+        },
       ),
     );
   }

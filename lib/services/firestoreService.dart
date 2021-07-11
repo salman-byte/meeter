@@ -195,6 +195,8 @@ class FirestoreService {
 //get group document from database
   Future<GroupModel?> getGroupDoc(String groupId) async {
     try {
+      print(
+          'inside getGroupDoc query, firebase user is: ${firebaseUser?.email}');
       if (firebaseUser == null) return null;
       return await FirebaseFirestore.instance
           .collection(GROUPS_COLLECTION)

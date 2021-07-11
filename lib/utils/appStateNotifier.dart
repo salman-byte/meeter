@@ -21,6 +21,7 @@ class AppStateNotifier extends ChangeNotifier {
   ///set the current selected group and notifies listeners via group id String
   set setCurrentSelectedChatViaGroupId(String groupId) {
     FirestoreService.instance.getGroupDoc(groupId).then((value) {
+      print('group modifiedAt from firebase : ${value?.modifiedAt}');
       _currentSelectedChatGroup = value;
       notifyListeners();
     });
