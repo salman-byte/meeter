@@ -12,7 +12,8 @@ body {
     justify-items: center;
     align-items: center;
     align-content: center;
-    background-color: #9C27B0;
+    /* background-color: #9C27B0; */
+    background-color: #6F61E8;
 }
 
 #loader-title {

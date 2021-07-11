@@ -76,7 +76,7 @@ class _CreateMeetState extends State<CreateMeet> {
             Padding(
               padding: const EdgeInsets.all(6.0),
               child: Text(
-                'Schedule new meeting',
+                'Start chat/ Schedule new meeting',
                 style: Theme.of(context).textTheme.headline3,
               ),
             ),
@@ -147,7 +147,7 @@ class _CreateMeetState extends State<CreateMeet> {
 
   Padding buildStep2Form(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: context.safePercentWidth * 10),
+      padding: EdgeInsets.only(left: context.safePercentWidth * 10),
       child: AnimatedSwitcher(
         duration: Duration(milliseconds: 500),
         child: isStep2Complete
@@ -312,7 +312,7 @@ class _CreateMeetState extends State<CreateMeet> {
             padding:
                 EdgeInsets.symmetric(horizontal: context.safePercentWidth * 20),
             child: CustomTextField(
-              labelText: 'Group name',
+              labelText: 'Group/ Chat name',
               onChanged: (String? input) {
                 input == null ? groupName = 'unnamed' : groupName = input;
               },
@@ -492,14 +492,14 @@ class _CreateMeetState extends State<CreateMeet> {
       mainAxisSize: MainAxisSize.max,
       children: [
         Text(
-          'choose a group',
+          'choose a chat',
           style: Theme.of(context).textTheme.headline5,
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'or create new group',
+              'select contact/ create new group',
               style: Theme.of(context).textTheme.headline6,
             ),
             SizedBox(width: 5),
@@ -507,7 +507,10 @@ class _CreateMeetState extends State<CreateMeet> {
                 value: isCreateNewGroupChecked,
                 onChanged: (value) {
                   setState(() {
-                    value! ? selectedList.clear() : selectedGroup = null;
+                    if (value!) {
+                      selectedGroup = null;
+                    }
+                    selectedList.clear();
                     isCreateNewGroupChecked = value;
                   });
                 }),

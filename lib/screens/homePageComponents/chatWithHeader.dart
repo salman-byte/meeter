@@ -46,74 +46,86 @@ class _ChatViewWithHeaderState extends State<ChatViewWithHeader> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-              child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Text(
-                  widget.group.name!,
-                  style: Theme.of(context).textTheme.headline5,
+    return Scaffold(
+      body: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    // top: BorderSide(
+                    //     width: 16.0, color: Colors.lightBlue.shade600),
+                    bottom: BorderSide(width: 3, color: Color(0xFF6F61E8)),
+                    // BorderSide(width: 2, color: Colors.lightBlue.shade900),
+                  ),
                 ),
-              ),
-              PopupMenuButton(onSelected: (value) async {
-                switch (value) {
-                  case 1:
-                    buildShowAnimatedMeetingDialog(context, widget.group.id!);
-                    break;
-                  case 2:
-                    final CalendarEventModel? event = await showDialog(
-                        context: context,
-                        builder: (context) => const CreateEventDialog());
-                    if (event != null) {
-                      scheduleCalenderEventAndMeetForLater(event);
-                    }
-                    break;
-                  case 3:
-                    setState(() {
-                      notesOpen = !notesOpen;
-                    });
-                    break;
-                  default:
-                }
-
-                // VxNavigator.of(context).push(Uri.parse('/meet'));
-              }, itemBuilder: (context) {
-                return <PopupMenuItem>[
-                  PopupMenuItem(value: 1, child: Text('Start meeting')),
-                  PopupMenuItem(value: 2, child: Text('Schedule meeting')),
-                  PopupMenuItem(value: 3, child: Text('Notes')),
-                ];
-              })
-            ],
-          )),
-          Divider(),
-          AnimatedContainer(
-            duration: Duration(seconds: 1),
-            child: notesOpen
-                ? LimitedBox(
-                    maxHeight: context.safePercentHeight * 30,
-                    child: SingleChildScrollView(
-                      child: Container(
-                        width: double.maxFinite,
-                        color: Colors.amber,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(noteText),
-                        ),
+                height: context.safePercentHeight * 10,
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        widget.group.name!,
+                        style: Theme.of(context).textTheme.headline5,
                       ),
                     ),
-                  )
-                : Container(),
-          ),
-          Expanded(child: ChatPage()),
-        ]);
+                    PopupMenuButton(onSelected: (value) async {
+                      switch (value) {
+                        case 1:
+                          buildShowAnimatedMeetingDialog(
+                              context, widget.group.id!);
+                          break;
+                        case 2:
+                          final CalendarEventModel? event = await showDialog(
+                              context: context,
+                              builder: (context) => const CreateEventDialog());
+                          if (event != null) {
+                            scheduleCalenderEventAndMeetForLater(event);
+                          }
+                          break;
+                        case 3:
+                          setState(() {
+                            notesOpen = !notesOpen;
+                          });
+                          break;
+                        default:
+                      }
+
+                      // VxNavigator.of(context).push(Uri.parse('/meet'));
+                    }, itemBuilder: (context) {
+                      return <PopupMenuItem>[
+                        PopupMenuItem(value: 1, child: Text('Start meeting')),
+                        PopupMenuItem(
+                            value: 2, child: Text('Schedule meeting')),
+                        PopupMenuItem(value: 3, child: Text('Notes')),
+                      ];
+                    })
+                  ],
+                )),
+            AnimatedContainer(
+              duration: Duration(seconds: 1),
+              child: notesOpen
+                  ? LimitedBox(
+                      maxHeight: context.safePercentHeight * 30,
+                      child: SingleChildScrollView(
+                        child: Container(
+                          width: double.maxFinite,
+                          color: Colors.amber,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(noteText),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(),
+            ),
+            Expanded(child: ChatPage()),
+          ]),
+    );
   }
 
   Future buildShowAnimatedMeetingDialog(BuildContext context, String id) async {

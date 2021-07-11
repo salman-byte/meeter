@@ -47,6 +47,25 @@ class ThemeProvider with ChangeNotifier {
   /// Global theme data we are always check if the light theme is enabled #isLightTheme
   ThemeData themeData() {
     return ThemeData(
+      dividerColor: Color(0xFF6F61E8),
+      // highlightColor: Color(0xFF6F61E8),
+      // primaryTextTheme: ,
+      textTheme:
+          isLightTheme ? Typography.blackHelsinki : Typography.whiteHelsinki,
+
+//        Theme.of(context).textTheme.apply(
+//   bodyColor: Colors.pink,
+//   displayColor: Colors.pink,
+// );,
+// inputDecorationTheme: ,
+
+// buttonColor: ,
+      inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(color: Color(0xFF6F61E8)),
+          focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF6F61E8)))),
+      primaryColorDark: Color(0xFF6F61E8),
+      accentColor: Color(0xFF6F61E8),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       primarySwatch: isLightTheme ? Colors.blue : Colors.lightGreen,
       primaryColor: isLightTheme ? Colors.white : Color(0xFF1E1F28),
@@ -60,7 +79,7 @@ class ThemeProvider with ChangeNotifier {
   // Theme mode to display unique properties not cover in theme data
   ThemeColor themeMode() {
     return ThemeColor(
-      selectedTileColor: isLightTheme ? Colors.blue : Color(0xFF222029),
+      selectedTileColor: isLightTheme ? Color(0xFF6F61E8) : Color(0xFF222029),
       inputBackgroundColor:
           isLightTheme ? Color(0xFFe7e7e8) : Color(0xFF222029),
       themeColor: Colors.purple,
