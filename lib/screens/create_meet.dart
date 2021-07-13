@@ -68,6 +68,13 @@ class _CreateMeetState extends State<CreateMeet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: !(context.mdDeviceType == MobileDeviceType.handset)
+          ? null
+          : AppBar(
+              title: Text(
+                'Start chat/ Schedule meeting',
+              ),
+            ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(10),
         child: Column(
@@ -75,16 +82,21 @@ class _CreateMeetState extends State<CreateMeet> {
           children: [
             Padding(
               padding: const EdgeInsets.all(6.0),
-              child: Text(
-                'Start chat/ Schedule new meeting',
-                style: Theme.of(context).textTheme.headline3,
-              ),
+              child: (context.mdDeviceType == MobileDeviceType.handset)
+                  ? Container()
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Start chat/ Schedule new meeting',
+                        style: Theme.of(context).textTheme.headline3,
+                      ),
+                    ),
             ),
             Divider(),
             SizedBox(height: 15),
             Text(
               'Step 1:',
-              style: Theme.of(context).textTheme.headline4,
+              style: Theme.of(context).textTheme.headline5,
             ),
             Divider(),
             buildStep1form(context),
@@ -93,12 +105,10 @@ class _CreateMeetState extends State<CreateMeet> {
             SizedBox(height: 15),
             Text(
               'Step 2:',
-              style: Theme.of(context).textTheme.headline4,
+              style: Theme.of(context).textTheme.headline5,
             ),
             Divider(),
             buildStep2Form(context),
-            SizedBox(height: 10),
-            Divider(),
             SizedBox(height: 10),
             buildStep2FormSummary(context),
             SizedBox(height: 20),
@@ -152,32 +162,72 @@ class _CreateMeetState extends State<CreateMeet> {
         duration: Duration(milliseconds: 500),
         child: isStep2Complete
             ? Container()
-            : Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Add meeting details',
-                    style: Theme.of(context).textTheme.headline5,
-                  ),
-                  CustomButton(
-                    text: 'add meeting',
-                    autoSize: true,
-                    onPressed: !isStep1Complete
-                        ? null
-                        : () async {
-                            final CalendarEventModel? event = await showDialog(
-                                context: context,
-                                builder: (context) =>
-                                    const CreateEventDialog());
-                            if (event != null) {
-                              showEventDataOnScreen(event);
-                            }
-                          },
-                  ),
-                ],
+            : VxDevice(
+                mobile: buildRowForStep2FormMobileView(context),
+                web: buildRowForStep2FormWebView(context),
               ),
       ),
+    );
+  }
+
+  Wrap buildRowForStep2FormMobileView(BuildContext context) {
+    return Wrap(
+      spacing: double.maxFinite,
+      direction: Axis.horizontal, alignment: WrapAlignment.spaceBetween,
+      // mainAxisSize: MainAxisSize.max,
+      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Add meeting details',
+              style: Theme.of(context).textTheme.headline5,
+            )),
+        Align(
+          alignment: Alignment.topRight,
+          child: CustomButton(
+            text: 'add meeting',
+            autoSize: true,
+            onPressed: !isStep1Complete
+                ? null
+                : () async {
+                    final CalendarEventModel? event = await showDialog(
+                        context: context,
+                        builder: (context) => const CreateEventDialog());
+                    if (event != null) {
+                      showEventDataOnScreen(event);
+                    }
+                  },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Row buildRowForStep2FormWebView(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Add meeting details',
+          style: Theme.of(context).textTheme.headline5,
+        ),
+        CustomButton(
+          text: 'add meeting',
+          autoSize: true,
+          onPressed: !isStep1Complete
+              ? null
+              : () async {
+                  final CalendarEventModel? event = await showDialog(
+                      context: context,
+                      builder: (context) => const CreateEventDialog());
+                  if (event != null) {
+                    showEventDataOnScreen(event);
+                  }
+                },
+        ),
+      ],
     );
   }
 
@@ -188,37 +238,75 @@ class _CreateMeetState extends State<CreateMeet> {
         duration: Duration(milliseconds: 500),
         child: isStep1Complete
             ? Container()
-            : Column(
-                children: [
-                  buildRowForNewGroupCheckBox(),
-                  SizedBox(height: 10),
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: 500),
-                    child: !isCreateNewGroupChecked
-                        ? buildGroupListToSelect(context)
-                        : buildContainerForGroupDataInput(),
-                  ),
-                  SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: CustomButton(
-                      text: 'done',
-                      autoSize: true,
-                      onPressed:
-                          selectedGroup == null && selectedList.length == 0
-                              ? null
-                              : () {
-                                  setState(() {
-                                    isStep1Complete = true;
-                                  });
-                                },
-                    ),
-                  ),
-                  Divider(height: 10),
-                  SizedBox(height: 10),
-                ],
+            : VxDevice(
+                mobile: buildColumnForMobileViewForm1(context),
+                web: buildColumnForWebViewForm1(context),
               ),
       ),
+    );
+  }
+
+  Column buildColumnForMobileViewForm1(BuildContext context) {
+    return Column(
+      children: [
+        buildRowForNewGroupCheckBoxForMobile(),
+        SizedBox(height: 10),
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 500),
+          child: !isCreateNewGroupChecked
+              ? buildGroupListToSelect(context)
+              : buildContainerForGroupDataInput(),
+        ),
+        SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: CustomButton(
+            text: 'done',
+            autoSize: true,
+            onPressed: selectedGroup == null && selectedList.length == 0
+                ? null
+                : () {
+                    setState(() {
+                      isStep1Complete = true;
+                    });
+                  },
+          ),
+        ),
+        Divider(height: 10),
+        SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Column buildColumnForWebViewForm1(BuildContext context) {
+    return Column(
+      children: [
+        buildRowForNewGroupCheckBoxForWeb(),
+        SizedBox(height: 10),
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 500),
+          child: !isCreateNewGroupChecked
+              ? buildGroupListToSelect(context)
+              : buildContainerForGroupDataInput(),
+        ),
+        SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: CustomButton(
+            text: 'done',
+            autoSize: true,
+            onPressed: selectedGroup == null && selectedList.length == 0
+                ? null
+                : () {
+                    setState(() {
+                      isStep1Complete = true;
+                    });
+                  },
+          ),
+        ),
+        Divider(height: 10),
+        SizedBox(height: 10),
+      ],
     );
   }
 
@@ -239,15 +327,13 @@ class _CreateMeetState extends State<CreateMeet> {
                     SizedBox(height: 10),
                     !isCreateNewGroupChecked
                         ? Container()
-                        : Row(children: [
-                            Text('group name: $groupName '),
-                          ]),
+                        : Text('group name: $groupName '),
                     !isCreateNewGroupChecked
                         ? Container()
                         : SizedBox(height: 10),
                     (selectedGroup == null && selectedList.length == 0)
                         ? Container()
-                        : Row(
+                        : Wrap(
                             children: [
                               Text(isCreateNewGroupChecked
                                   ? 'members: '
@@ -352,7 +438,7 @@ class _CreateMeetState extends State<CreateMeet> {
             padding:
                 EdgeInsets.symmetric(horizontal: context.safePercentWidth * 20),
             child: CustomTextField(
-              labelText: 'Member name',
+              labelText: 'Member name/ email',
               // decoration: InputDecoration(),
               onChanged: (String query) {
                 if (query.length != 0) {
@@ -463,9 +549,7 @@ class _CreateMeetState extends State<CreateMeet> {
             [],
             (previousValue, element) => [
                   ...previousValue,
-                  SizedBox(
-                    width: context.safePercentWidth * 30,
-                    height: context.safePercentHeight * 10,
+                  SizedBox.fromSize(
                     child: ChatListTile(
                         onTileTap: () {
                           setState(() {
@@ -486,7 +570,7 @@ class _CreateMeetState extends State<CreateMeet> {
     );
   }
 
-  Row buildRowForNewGroupCheckBox() {
+  Row buildRowForNewGroupCheckBoxForWeb() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       mainAxisSize: MainAxisSize.max,
@@ -500,9 +584,50 @@ class _CreateMeetState extends State<CreateMeet> {
           children: [
             Text(
               'select contact/ create new group',
+              softWrap: true,
               style: Theme.of(context).textTheme.headline6,
             ),
             SizedBox(width: 5),
+            Checkbox(
+                value: isCreateNewGroupChecked,
+                onChanged: (value) {
+                  setState(() {
+                    if (value!) {
+                      selectedGroup = null;
+                    }
+                    selectedList.clear();
+                    isCreateNewGroupChecked = value;
+                  });
+                }),
+          ],
+        )
+      ],
+    );
+  }
+
+  Wrap buildRowForNewGroupCheckBoxForMobile() {
+    return Wrap(
+      direction: Axis.horizontal,
+      children: [
+        FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'choose a chat',
+              style: Theme.of(context).textTheme.headline5,
+            )),
+        SizedBox(width: 25),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'select contact/ create new group',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  )),
+            ),
+            SizedBox(width: 25),
             Checkbox(
                 value: isCreateNewGroupChecked,
                 onChanged: (value) {

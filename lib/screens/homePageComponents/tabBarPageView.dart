@@ -9,39 +9,52 @@ class TabBarPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size(double.infinity, context.safePercentHeight * 10),
-          child: Column(
-            children: [
-              Container(
-                child: new TabBar(
-                  tabs: [
-                    Tab(
-                      icon: Icon(Icons.chat),
-                      text: 'chats',
-                      iconMargin: EdgeInsets.only(bottom: 5),
-                    ),
-                    Tab(
-                      icon: Icon(Icons.person),
-                      text: 'available',
-                      iconMargin: EdgeInsets.only(bottom: 5),
-                    ),
-                    // Tab(icon: Icon(Icons.more)),
-                  ],
-                ),
-              ),
-            ],
+      child: VxDevice(
+        mobile: Scaffold(
+          appBar: PreferredSize(
+            preferredSize:
+                Size(double.infinity, context.safePercentHeight * 10),
+            child: buildTabsOnTop(),
           ),
+          body: buildTabBarViewBody(),
         ),
-        body: TabBarView(
-          children: [
-            ChatGroupList(),
-            AllUsersList(),
-            // Icon(Icons.more),
-          ],
+        web: Scaffold(
+          appBar: PreferredSize(
+            preferredSize:
+                Size(double.infinity, context.safePercentHeight * 10),
+            child: buildTabsOnTop(),
+          ),
+          body: buildTabBarViewBody(),
         ),
       ),
+    );
+  }
+
+  TabBarView buildTabBarViewBody() {
+    return TabBarView(
+      children: [
+        ChatGroupList(),
+        AllUsersList(),
+        // Icon(Icons.more),
+      ],
+    );
+  }
+
+  TabBar buildTabsOnTop() {
+    return TabBar(
+      tabs: [
+        Tab(
+          icon: Icon(Icons.chat),
+          text: 'chats',
+          iconMargin: EdgeInsets.only(bottom: 5),
+        ),
+        Tab(
+          icon: Icon(Icons.person),
+          text: 'available',
+          iconMargin: EdgeInsets.only(bottom: 5),
+        ),
+        // Tab(icon: Icon(Icons.more)),
+      ],
     );
   }
 }

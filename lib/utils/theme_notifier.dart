@@ -82,7 +82,7 @@ class ThemeProvider with ChangeNotifier {
       selectedTileColor: isLightTheme ? Color(0xFF6F61E8) : Color(0xFF222029),
       inputBackgroundColor:
           isLightTheme ? Color(0xFFe7e7e8) : Color(0xFF222029),
-      themeColor: Colors.purple,
+      themeColor: Color(0xFF6F61E8),
       gradient: [
         if (isLightTheme) ...[Color(0xDDFF0080), Color(0xDDFF8C00)],
         if (!isLightTheme) ...[Color(0xFF8983F7), Color(0xFFA3DAFB)]

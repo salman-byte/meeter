@@ -6,6 +6,7 @@ import 'package:meeter/models/eventModel.dart';
 import 'package:meeter/services/firestoreService.dart';
 import 'package:meeter/utils/authStatusNotifier.dart';
 import 'package:provider/provider.dart';
+import 'package:velocity_x/velocity_x.dart';
 import '../utils/extensions.dart';
 import '../utils/constants.dart';
 
@@ -61,23 +62,48 @@ class _EventPageState extends State<EventPage> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting)
                     return Scaffold(body: LinearProgressIndicator());
-                  return Scaffold(
-                    resizeToAvoidBottomInset: false,
-                    floatingActionButton: FloatingActionButton(
-                      tooltip: 'Go to current date',
-                      child: const Icon(Icons.calendar_today),
-                      onPressed: _showCurrentMonth,
-                    ),
-                    body: Padding(
-                      padding: const EdgeInsets.all(25.0),
-                      child: Column(
-                        children: [
-                          /// Calendar control row.
-                          buildRowForNavigatorButtonsAndMonthNameDisplay(),
+                  return VxDevice(
+                    web: Scaffold(
+                      resizeToAvoidBottomInset: false,
+                      floatingActionButton: FloatingActionButton(
+                        tooltip: 'Go to current date',
+                        child: const Icon(Icons.calendar_today),
+                        onPressed: _showCurrentMonth,
+                      ),
+                      body: Padding(
+                        padding: const EdgeInsets.all(25.0),
+                        child: Column(
+                          children: [
+                            /// Calendar control row.
+                            buildRowForNavigatorButtonsAndMonthNameDisplay(),
 
-                          /// Calendar view.
-                          buildCalendarViewExpanded(snapshot),
-                        ],
+                            /// Calendar view.
+                            buildCalendarViewExpanded(snapshot),
+                          ],
+                        ),
+                      ),
+                    ),
+                    mobile: Scaffold(
+                      appBar: AppBar(
+                        title: Text('Scheduled events'),
+                      ),
+                      resizeToAvoidBottomInset: false,
+                      floatingActionButton: FloatingActionButton(
+                        tooltip: 'Go to current date',
+                        child: const Icon(Icons.calendar_today),
+                        onPressed: _showCurrentMonth,
+                      ),
+                      body: Padding(
+                        padding: const EdgeInsets.all(25.0),
+                        child: Column(
+                          children: [
+                            /// Calendar control row.
+                            buildRowForNavigatorButtonsAndMonthNameDisplay(),
+
+                            /// Calendar view.
+                            buildCalendarViewExpanded(snapshot),
+                          ],
+                        ),
                       ),
                     ),
                   );

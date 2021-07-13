@@ -8,6 +8,7 @@ import 'package:velocity_x/velocity_x.dart';
 
 import 'authUI.dart';
 import 'homePageComponents/chatGroupList.dart';
+import 'homePageComponents/tabBarPageView.dart';
 import 'homePageComponents/webVievPageBody.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -32,12 +33,61 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      appBar: buildAppBar(),
-      body: VxDevice(
-        mobile: MobileViewPageBody(),
-        // mobile: WebViewPageBody(),
-        web: WebViewPageBody(),
+    return VxDevice(
+      mobile: Consumer<AuthStatusNotifier>(builder: (context, authData, child) {
+        return !(authData.isUserAuthenticated)
+            ? Scaffold(
+                appBar: buildAppBar(),
+                body: MobileViewPageBody(),
+              )
+            : Scaffold(
+                drawer: buildDrawerForNavigationInMobileView(),
+                appBar: buildAppBar(),
+                body: MobileViewPageBody());
+      }),
+      web: Scaffold(appBar: buildAppBar(), body: WebViewPageBody()),
+    );
+  }
+
+  Drawer buildDrawerForNavigationInMobileView() {
+    return Drawer(
+      // Add a ListView to the drawer. This ensures the user can scroll
+      // through the options in the drawer if there isn't enough vertical
+      // space to fit everything.
+      child: Container(
+        color: Theme.of(context).backgroundColor,
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).accentColor,
+              ),
+              child: Center(child: Text('Drawer Header')),
+            ),
+            ListTile(
+              title: Text('start chat/ schedule meet'),
+              leading: Icon(Icons.add_to_queue),
+              onTap: () {
+                // Update the state of the app
+                VxNavigator.of(context).push(Uri.parse('/create-meet'));
+                // Then close the drawer
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('check events'),
+              leading: Icon(Icons.calendar_today),
+              onTap: () {
+                // Update the state of the app
+                VxNavigator.of(context).push(Uri.parse('/schedule'));
+                // Then close the drawer
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -124,10 +174,7 @@ class MobileViewPageBody extends StatelessWidget {
           ? SignInSignUpFlow(
               inDialogMode: false,
             )
-          : Container(
-              width: context.percentWidth * 30,
-              child: ChatGroupList(),
-            );
+          : TabBarPageView();
     });
   }
 }

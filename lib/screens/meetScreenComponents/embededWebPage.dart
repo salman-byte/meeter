@@ -8,16 +8,19 @@ class WebViewForMeetIntegration extends StatelessWidget {
   final String name = 'anonymous';
 
   final double height;
+  final double? width;
   final String subject;
 
   const WebViewForMeetIntegration(
-      {Key? key, required this.height, required this.subject})
+      {Key? key, required this.height, required this.subject, this.width})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return WebViewX(
-      onWebResourceError: (error) {},
+      onWebResourceError: (error) {
+        print(error.description);
+      },
       initialContent: """
       <!DOCTYPE html>
       <body style="margin: 0;">
@@ -47,7 +50,7 @@ class WebViewForMeetIntegration extends StatelessWidget {
       SHOW_POWERED_BY: false,
       SHOW_PROMOTIONAL_CLOSE_PAGE: false,
                       DISABLE_DOMINANT_SPEAKER_INDICATOR: true },
-                    width: '100%',
+                    width: '${width ?? '100%'}',
                     height: $height,
                     parentNode: document.querySelector('#meet')
                 };

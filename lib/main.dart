@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meeter/screens/authUiCOmponents/confirmEmail.dart';
 import 'package:meeter/screens/authUiCOmponents/forgotPassword.dart';
+import 'package:meeter/screens/create_meet.dart';
 
 import 'package:meeter/screens/events_page.dart';
 import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
+import 'screens/homePageComponents/chatWithHeader.dart';
 import 'screens/home_page.dart';
 import 'screens/authUI.dart';
 import 'screens/meet_screen.dart';
@@ -70,7 +72,12 @@ class _MyAppState extends State<MyApp> {
       '/forgot-password': (uri, params) =>
           MaterialPage(child: ForgotPassword()),
       '/confirm-email': (uri, params) => MaterialPage(child: ConfirmEmail()),
+      '/chat-view': (uri, params) => MaterialPage(
+              child: ChatViewWithHeader(
+            group: params['group'],
+          )),
       '/schedule': (uri, params) => MaterialPage(child: EventPage()),
+      '/create-meet': (uri, params) => MaterialPage(child: CreateMeet()),
       '/signup': (uri, params) => MaterialPage(
               child: SignInSignUpFlow(
             inDialogMode: true,

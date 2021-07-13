@@ -62,15 +62,16 @@ class _MeetingState extends State<Meeting> {
           }
           return Container(
               child: VxDevice(
-            mobile: Expanded(child: Container()
-                // child: JitsiMeetConferencing(
-                //   extraJS: [
-                //     // extraJs setup example
-                //     '<script>function echo(){console.log("echo!!!")};</script>',
-                //     '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
-                //   ],
-                // ),
-                ),
+            mobile: WebViewForMeetIntegration(
+                subject: widget.subject, height: height),
+            // child: JitsiMeetConferencing(
+            //   extraJS: [
+            //     // extraJs setup example
+            //     '<script>function echo(){console.log("echo!!!")};</script>',
+            //     '<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>'
+            //   ],
+            // ),
+            // ),
             web: Row(children: [
               ChatScreenSideMenu(),
               Flexible(

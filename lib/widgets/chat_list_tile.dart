@@ -35,7 +35,11 @@ class ChatListTile extends StatelessWidget {
       selected: isSelected,
       onTap: onTileTap,
       title: Text(title),
-      subtitle: Text(subTitle),
+      subtitle: Text(
+        subTitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(20.0), //or 15.0
         child: Container(

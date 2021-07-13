@@ -19,7 +19,8 @@ class ChatScreenSideMenu extends StatefulWidget {
 class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
   late double chatWidth = 25;
   late double chatheight = 25;
-  Color _color = Colors.amber;
+  Color _color = Color(0xFF6F61E8);
+  // Color _color = Colors.amber;
   bool showDrawer = false;
   bool showChatBox = false;
   bool showNotesBox = false;
@@ -33,6 +34,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
     groupId = Provider.of<AppStateNotifier>(context, listen: false)
         .getCurrentSelectedChat
         ?.id;
+    updateNote();
     super.initState();
   }
 
@@ -40,7 +42,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
     if (groupId != null)
       FirestoreService.instance.getNoteDoc(groupId!).then((value) {
         setState(() {
-          noteController.text = value;
+          noteController.text = value.trim();
         });
       });
   }
@@ -63,22 +65,6 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
           children: [
             Column(
               children: [
-                AnimatedContainer(
-                  duration: Duration(milliseconds: 500),
-                  // height: context.safePercentHeight * 100,
-                  color: Colors.blue,
-                  child: RotatedBox(
-                    quarterTurns: showDrawer ? 1 : 3,
-                    child: IconButton(
-                      icon: Icon(Icons.expand_more),
-                      onPressed: () {
-                        setState(() {
-                          showDrawer = !showDrawer;
-                        });
-                      },
-                    ),
-                  ),
-                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: AnimatedSwitcher(
@@ -89,7 +75,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                 ? Icon(Icons.notes)
                                 : Icon(Icons.close),
                             onPressed: () {
-                              updateNote();
+                              // updateNote();
                               setState(() {
                                 showChatBox = false;
                                 showNotesBox = !showNotesBox;
@@ -105,7 +91,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                     ? Icon(Icons.expand_less)
                                     : Icon(Icons.expand_more),
                                 onPressed: () {
-                                  updateNote();
+                                  // updateNote();
                                   setState(() {
                                     showChatBox = false;
                                     showNotesBox = !showNotesBox;
@@ -168,23 +154,28 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      // noteText != null
-                                      //     ? Text(noteText!)
-                                      //     : Container(),
-                                      TextField(
-                                        keyboardType: TextInputType.multiline,
-                                        maxLines: null,
-                                        controller: noteController,
-                                        onChanged: (value) {
-                                          setState(() {});
-                                        },
-                                        decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                            hintText: 'Write your thoughts...'),
-                                      ),
-                                    ],
+                                  child: OverflowBox(
+                                    child: Column(
+                                      children: [
+                                        // noteText != null
+                                        //     ? Text(noteText!)
+                                        //     : Container(),
+                                        TextField(
+                                          enableInteractiveSelection: true,
+                                          keyboardType: TextInputType.multiline,
+                                          maxLines: null,
+                                          controller: noteController,
+                                          onChanged: (value) {
+                                            setState(() {});
+                                          },
+                                          decoration: InputDecoration(
+                                              border: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              hintText:
+                                                  'Write your thoughts...'),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -201,7 +192,8 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
                                             : () {
                                                 FirestoreService.instance
                                                     .createNoteDoc(
-                                                        noteController.text,
+                                                        noteController.text
+                                                            .trim(),
                                                         groupId!);
                                               },
                                       ),

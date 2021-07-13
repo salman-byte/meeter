@@ -5,6 +5,7 @@ import 'package:meeter/utils/appStateNotifier.dart';
 import 'package:meeter/utils/theme_notifier.dart';
 import 'package:meeter/widgets/chat_list_tile.dart';
 import 'package:provider/provider.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 class ChatGroupList extends StatelessWidget {
   const ChatGroupList({
@@ -40,16 +41,26 @@ class ChatGroupList extends StatelessWidget {
                           isSelected:
                               snapshot.data![index].id == currentSelectedChatId,
                           onTileTap: () {
-                            appState.setCurrentSelectedChat =
-                                snapshot.data![index];
-                            FirestoreService.instance
-                                .markLastMessageAsReadInGroupDoc(
-                                    groupId: snapshot.data![index].id!);
+                            if (appState.getCurrentSelectedChat?.id !=
+                                snapshot.data![index].id) {
+                              appState.setCurrentSelectedChat =
+                                  snapshot.data![index];
+                              if (!(snapshot.data![index].recentMessage!.readBy!
+                                  .contains(FirestoreService
+                                      .instance.firebaseUser?.uid))) {
+                                FirestoreService.instance
+                                    .markLastMessageAsReadInGroupDoc(
+                                        groupId: snapshot.data![index].id!);
+                              }
+                            }
+                            if (context.isMobile) {
+                              VxNavigator.of(context).push(
+                                  Uri.parse('/chat-view'),
+                                  params: {'group': snapshot.data![index]});
+                            }
                           },
                           title: snapshot.data![index].name!,
-                          subTitle: recentMessage.length > 25
-                              ? recentMessage.substring(0, 25) + '...'
-                              : recentMessage,
+                          subTitle: recentMessage,
                           avatorUrl: '',
                           trailingWidget: buildTrailingWidget(
                               snapshot, index, currentSelectedChatId));
