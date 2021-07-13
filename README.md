@@ -113,5 +113,4 @@ launch the app in browser
 - [flutter_chat_ui](https://pub.dev/packages/flutter_chat_ui)
 - [image_picker](https://pub.dev/packages/image_picker)
 - [mime](https://pub.dev/packages/mime)
-
-
+- [jitsi meet](https://jitsi.org/)
