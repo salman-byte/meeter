@@ -141,7 +141,7 @@ class _ChatScreenSideMenuState extends State<ChatScreenSideMenu> {
             ),
             AnimatedContainer(
               duration: Duration(milliseconds: 500),
-              color: _color,
+              color: Colors.amber,
               width: showNotesBox ? context.safePercentWidth * 25 : 0,
               child: AnimatedSwitcher(
                   duration: Duration(milliseconds: 500),
